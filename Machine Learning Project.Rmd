@@ -1,0 +1,2302 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(ggmosaic)
+library(fastDummies)
+library(ggpubr)
+```
+
+```{r}
+data.countries <- read.csv("C:\\Glean Files\\Jomiloju\\Machine Learning Project Data\\Dataset (All Countries).csv")
+lapply(data.countries,unique)
+variable.names(data.countries)
+```
+
+```{r}
+data.countries$v013<- as.factor(data.countries$v013)
+
+data.countries$v013<- type.convert(data.countries$v013, as.is = FALSE)
+data.countries$v190<- type.convert(data.countries$v190, as.is = TRUE)
+data.countries$v228<- gsub("9", "", as.character(data.countries$v228))
+data.countries$v401<- gsub("9", "", as.character(data.countries$v401))
+data.countries$v463a<- gsub("9", "", as.character(data.countries$v463a))
+data.countries$v463b<- gsub("9", "", as.character(data.countries$v463b))
+data.countries$v463b<- gsub("9", "", as.character(data.countries$v463b))
+data.countries$v463x<- gsub("9", "", as.character(data.countries$v463x))
+data.countries$v481<- gsub("9", "", as.character(data.countries$v481))
+
+data.countries$v525<- gsub("99", "", as.character(data.countries$v525))
+data.countries$v525<- gsub("inconsistent", "", as.character(data.countries$v525))
+data.countries$v525<- gsub("don't know", "", as.character(data.countries$v525))
+
+data.countries$v531<- gsub("99", "", as.character(data.countries$v531))
+data.countries$v531<- gsub("inconsistent", "", as.character(data.countries$v531))
+data.countries$v531<- gsub("don't know", "", as.character(data.countries$v531))
+data.countries$v531<- type.convert(data.countries$v531, as.is = TRUE)
+
+data.countries$v701<- gsub("don't know", "", as.character(data.countries$v701))
+data.countries$v701<- gsub("9", "", as.character(data.countries$v701))
+
+data.countries$m13<- gsub("don't know", "", as.character(data.countries$m13))
+data.countries$m13<- gsub("99", "", as.character(data.countries$m13))
+data.countries$m13<- type.convert(data.countries$m13, as.is = TRUE)
+
+data.countries$m14<- gsub("don't know", "", as.character(data.countries$m14))
+data.countries$m14<- gsub("99", "", as.character(data.countries$m14))
+data.countries$m14<- gsub("no antenatal visits", "0", as.character(data.countries$m14))
+data.countries$m14<- type.convert(data.countries$m14, as.is = TRUE)
+
+data.countries$m15<- gsub("99", "", as.character(data.countries$m15))
+
+data.countries$b6<- gsub("999", "", as.character(data.countries$b6))
+data.countries$b6<- gsub("died on day of birth", "100", as.character(data.countries$b6))
+data.countries$b6<- gsub("days: 1", "101", as.character(data.countries$b6))
+data.countries$b6<- gsub("months: 1", "201", as.character(data.countries$b6))
+data.countries$b6<- gsub("years: 1", "301", as.character(data.countries$b6))
+
+data.countries$m17<- gsub("9", "", as.character(data.countries$m17))
+
+data.countries$m18<- gsub("9", "", as.character(data.countries$m18))
+data.countries$m18<- gsub("don't know", "", as.character(data.countries$m18))
+
+data.countries$m57e<- gsub("9", "", as.character(data.countries$m57e))
+data.countries$m57f<- gsub("9", "", as.character(data.countries$m57f))
+data.countries$m57g<- gsub("9", "", as.character(data.countries$m57g))
+data.countries$m57h<- gsub("9", "", as.character(data.countries$m57h))
+data.countries$m57m<- gsub("9", "", as.character(data.countries$m57m))
+data.countries$m57n<- gsub("9", "", as.character(data.countries$m57n))
+
+
+data.countries<- data.countries %>%
+  mutate(v312=recode(v312, "not using" = "None","lactational amenorrhea (lam)" = "Modern", "male condom" = "Modern", 
+                                                     "periodic abstinence" = "Non-modern", "pill" = "Modern", "implants/norplant" = "Modern", "injections" = "Modern",
+                                                     "withdrawal" = "Non-modern", "female sterilization" = "Modern", "iud" = "Modern", "other traditional" = "Non-modern",
+                                                     "female condom" = "Modern", "emergency contraception" = "Modern", "other modern method" = "Modern", "standard days method (sdm)" = "Modern",
+                                                     "diaphragm" = "Modern", "male sterilization" = "Modern", "specific method 2" = "Non-modern", "specific method 1" = "Non-modern"),
+                          v501a=recode(v501,"married" = "Married", "living with partner" = "Unmarried", "no longer living together/separated" = "Unmarried", 
+                                       "never in union" = "Unmarried", "widowed" = "Unmarried", "divorced" = "Unmarried"),
+                          v501b=recode(v501,"married" = "Married", "living with partner" = "Never married", "no longer living together/separated" = "Formerly married", "never in union" = "Never married", "widowed" = "Formerly married", "divorced" = "Formerly married"),
+                          b0=recode(b0, "single birth" = "Single", "2nd of multiple" = "Multiple", "1st of multiple" = "Multiple", "3rd of multiple" = "Multiple"),
+                          m15=recode(m15,"24" = "Health facility", "25" = "Health facility", "27" = "Health facility", "32" = "Health facility", "33" = "Health facility",
+                                                    "34" = "Health facility", "government hospital" = "Health facility", "private hospital/clinic" = "Health facility", 
+                                                    "government health center" = "Health facility", "government health post" = "Health facility", "other private sector" = "Health facility",
+                                                    "other public sector" = "Health facility", "respondent's home" = "Out-of-facility", "other home" = "Out-of-facility", "other" = "Out-of-facility",
+                                                    "41" = "Out-of-facility", "42" = "Out-of-facility", "43" = "Out-of-facility", "44" = "Out-of-facility", "46" = "Out-of-facility"))
+
+
+
+data.countries$b7<- case_when((data.countries$b7== 0) ~ "a: <1 month",
+          (data.countries$b7>= 1) & (data.countries$b7 <= 6) ~ "b: 1-6 months",
+          (data.countries$b7>=7) & (data.countries$b7<=12) ~ "c: 7-12 months",
+          (data.countries$b7>=13) ~ "d: After 1-year"
+          )
+
+data.countries$b20<- case_when((data.countries$b20>=4) & (data.countries$b20<=8) ~ "a: Preterm",
+          (data.countries$b20 == 9) ~ "b: Term",
+          (data.countries$b20 == 10) ~ "c: Post-term"
+          )
+
+data.countries$b11<- case_when((data.countries$b11>=6) & (data.countries$b11<12) ~ "a: <12 months",
+          (data.countries$b11>=12) & (data.countries$b11<=23) ~ "b: 12-23 months",
+          (data.countries$b11>=24) & (data.countries$b11<=60) ~ "c: 2-5 years",
+          (data.countries$b11>60) ~ "d: >5 years"
+          )
+
+data.countries$m13<- case_when ((data.countries$m13>=0) & (data.countries$m13<4) ~ "a: First trimester",
+           (data.countries$m13>=4) & (data.countries$m13<7) ~ "b: Second trimester",
+           (data.countries$m13>=7) & (data.countries$m13<=10) ~ "c: Third trimester"
+           )
+
+data.countries$m14<- case_when ((data.countries$m14 == 0) ~ "a: No ANC visit",
+           (data.countries$m14>=1) & (data.countries$m14 <8) ~ "b: Insufficient ANC visit",
+           (data.countries$m14>=8) & (data.countries$m14<=90) ~ "c: Sufficient ANC visit"
+           )
+
+data.countries<- data.countries %>%
+  mutate(ANC = case_when((data.countries$m14 == "a: No ANC visit") ~ "0",
+                                (data.countries$m14 == "b: Insufficient ANC visit") & (data.countries$m13 == "a: First trimester") ~ "1",
+                                (data.countries$m14 == "b: Insufficient ANC visit") & (data.countries$m13 == "b: Second trimester") ~ "2",
+                                (data.countries$m14 == "b: Insufficient ANC visit") & (data.countries$m13 == "c: Third trimester") ~ "3",
+                                (data.countries$m14 == "c: Sufficient ANC visit") & (data.countries$m13 == "a: First trimester") ~ "4",
+                                (data.countries$m14 == "c: Sufficient ANC visit") & (data.countries$m13 == "b: Second trimester") ~ "5",
+                                (data.countries$m14 == "c: Sufficient ANC visit") & (data.countries$m13 == "c: Third trimester") ~ "6")
+         )
+
+data.countries<- data.countries %>%
+  mutate(ever.child = case_when((data.countries$v218 < 2) ~ "0-1 child",
+                                (data.countries$v218>=2) & (data.countries$v218<4) ~ "2-3 chidlren",
+                                (data.countries$v218>=4) ~ "4+ children"),
+         first.sex = case_when((data.countries$v531 < 18) ~ "<18 years",
+                              (data.countries$v531<=18) & (data.countries$v531<25) ~ "18-24 years",
+                              (data.countries$v531<=25) & (data.countries$v531<30) ~ "25-29 years",
+                              (data.countries$v531>=30) ~ "30+ years"),
+         child.status = case_when((data.countries$b5=="yes") & (data.countries$b8<=1) ~ "Alive: <=1 yr old",
+                                  (data.countries$b5=="yes") & (data.countries$b8>1) ~ "Alive: >1 yr old",
+                                  (data.countries$b5=="no") & (data.countries$b7=="a: <1 month" | data.countries$b7=="b: 1-6 months" | 
+                                                                 data.countries$b7=="c: 7-12 months") ~ "Dead: Within 1st year",
+                                  (data.countries$b5=="no") & (data.countries$b7=="d: After 1-year") ~ "Dead: After 1st year")
+         )
+
+
+data.countries<- data.countries %>%
+  mutate(smoke= case_when ((data.countries$v463a == "yes") | (data.countries$v463b == "yes") | (data.countries$v463e == "yes") |
+                           (data.countries$v463f == "yes") | (data.countries$v463g == "yes") | (data.countries$v463j == "yes") | 
+                           (data.countries$v463k == "yes") | (data.countries$v463l == "yes") | (data.countries$v463x == "yes") ~ "a: Yes",
+                           (data.countries$v463a == "no" | data.countries$v463a == "") &
+                           (data.countries$v463b == "no" | data.countries$v463b == "") &
+                           (data.countries$v463e == "no" | data.countries$v463e == "") &
+                           (data.countries$v463f == "no" | data.countries$v463f == "") & 
+                           (data.countries$v463g == "no" | data.countries$v463g == "") & 
+                           (data.countries$v463j == "no" | data.countries$v463j == "") & 
+                           (data.countries$v463k == "no" | data.countries$v463k == "") & 
+                           (data.countries$v463l == "no" | data.countries$v463l == "") & 
+                           (data.countries$v463x == "no" | data.countries$v463x == "") ~ "b: No"))
+
+data.countries<- data.countries %>%
+  mutate(ANC.facility= case_when((data.countries$m57e == "yes") | (data.countries$m57f == "yes") | (data.countries$m57g == "yes") |
+                             (data.countries$m57h == "yes") | (data.countries$m57m == "yes") | (data.countries$m57n == "yes")~ "a: Yes",
+                             (data.countries$m57e == "no" | data.countries$m57e == "") &
+                             (data.countries$m57f == "no" | data.countries$m57f == "") &
+                             (data.countries$m57g == "no" | data.countries$m57g == "") &
+                             (data.countries$m57h == "no" | data.countries$m57h == "") &
+                             (data.countries$m57m == "no" | data.countries$m57m == "") & 
+                             (data.countries$m57n == "no" | data.countries$m57n == "") ~ "b: No"))
+
+data.countries<- data.countries %>%
+  mutate(n_lostchild = v201 - v218)
+
+data.countries<- data.countries %>%
+  mutate(child_loss= case_when((data.countries$n_lostchild == 0) ~ 0,
+                             (data.countries$n_lostchild > 0) ~ 1))
+
+data.countries<- data.countries %>%
+  mutate(lost_child= case_when((data.countries$n_lostchild == 0) ~ 0,
+                             (data.countries$n_lostchild == 1) ~ 1,
+         (data.countries$n_lostchild > 1) ~ 2))
+
+
+data.countries$v228<- case_when((data.countries$v228 == "yes") ~ "yes", 
+                                 (data.countries$v228 == "no") ~ "no")
+
+data.countries$v401<- case_when((data.countries$v401 == "yes") ~ "yes", 
+                                (data.countries$v401 == "no") ~ "no")
+
+data.countries$v481<- case_when((data.countries$v481 == "yes") ~ "yes", 
+                                (data.countries$v481 == "no") ~ "no")
+
+data.countries$v701<- case_when((data.countries$v701 == "higher") ~ "higher", 
+                                (data.countries$v701 == "no education") ~ "no education",
+                                (data.countries$v701 == "primary") ~ "primary", 
+                                (data.countries$v701 == "secondary") ~ "secondary")
+
+data.countries$m15<- case_when((data.countries$m15 == "Health facility") ~ "Health facility", 
+                               (data.countries$m15 == "Out-of-facility") ~ "Out-of-facility")
+
+
+data.countries$m17<- case_when((data.countries$m17 == "yes") ~ "yes", 
+                               (data.countries$m17 == "no") ~ "no")
+
+data.countries$m18<- case_when((data.countries$m18 == "average") ~ "average", 
+                               (data.countries$m18 == "larger than average") ~ "larger than average",
+                               (data.countries$m18 == "smaller than average") ~ "smaller than average",
+                               (data.countries$m18 == "very large") ~ "very large",
+                               (data.countries$m18 == "very small") ~ "very small")
+
+
+
+data.countries<- subset(data.countries, select = -c(v463a,v463b,v463e,v463f,v463g,v463j,v463k,v463l,v463x,v463z,v525,v190a,v102,hw1,b6, m57e,m57f,m57g,m57h,m57m,m57n))
+
+names(which(colSums(is.na(data.countries))>0))
+
+```
+
+
+```{r}
+#Dataset for Individual Outcome
+outcome1.data<- subset(data.countries, select = c(v000,v007,v012,v013,v025,v106,v190,v501,v501a,v501b,v531,first.sex,v228,smoke,v201,v218, n_lostchild, child_loss,lost_child))
+
+outcome2.data<- subset(data.countries, select = c(v000,v007,v012,v013,v025,v106,v190,v501,v501a,v501b,v213,v228,m14,ANC.facility,v312,m15,v401,v481,child_loss))
+
+outcome3.data<- subset(data.countries, select = c(v000,v007,v013,v025,v106,v190,v501,v501a,v501b,b0,b4,b5,b20,v228,m15,v401,ANC.facility,child.status))
+
+cleaned.outcome1.data<- outcome1.data %>% 
+  drop_na()
+
+cleaned.outcome2.data<- outcome2.data %>% 
+  drop_na()
+
+cleaned.outcome3.data<- outcome3.data %>% 
+  drop_na()
+
+data.nomiss<- subset(data.countries, select = c(names(which(colSums(is.na(data.countries))==0))))
+
+```
+
+
+
+```{r}
+write.csv(data.nomiss,"C:\\UNO Class Doc\\Advanced Stat Machine Learning\\cleaned.csv", row.names = FALSE)
+
+write.csv(data.countries,"C:\\UNO Class Doc\\Advanced Stat Machine Learning\\full_data.csv", row.names = FALSE)
+```
+
+
+```{r}
+write.csv(cleaned.outcome1.data,"C:\\UNO Class Doc\\Advanced Stat Machine Learning\\outcome1.csv", row.names = FALSE)
+write.csv(cleaned.outcome2.data,"C:\\UNO Class Doc\\Advanced Stat Machine Learning\\outcome2.csv", row.names = FALSE)
+write.csv(cleaned.outcome3.data,"C:\\UNO Class Doc\\Advanced Stat Machine Learning\\outcome3.csv", row.names = FALSE)
+
+```
+
+
+```{r}
+ggplot(cleaned.outcome1.data, aes(x=v000, y=lost_child, fill=v025)) +
+    geom_boxplot(notch = FALSE, position = position_dodge(1)) +
+    labs(title = 'Boxplot of Children Ever Born across the African Countries ',
+         x='Country',
+         y='Number of children ever born')
+
+ggplot(cleaned.outcome1.data, aes(x=v000, y=lost_child)) +
+    geom_boxplot(notch = FALSE, position = position_dodge(1)) +
+    labs(title = 'Boxplot of Children Ever Born across the African Countries',
+         x='Country',
+         y='Number of children ever born')
+
+ggplot(cleaned.outcome1.data, aes(x=v025, y=lost_child)) +
+    geom_boxplot(notch = FALSE, position = position_dodge(1)) +
+    labs(title = 'Boxplot of Children Ever Born by region of residence',
+         x='Region of residence',
+         y='Number of children ever born')
+
+ggplot(cleaned.outcome1.data, aes(x=v106, y=lost_child)) +
+    geom_boxplot(notch = FALSE, position = position_dodge(1)) +
+    labs(title = 'Boxplot of Children Ever Born by level of education',
+         x='Level of education',
+         y='Number of children ever born')
+
+ggplot(cleaned.outcome1.data, aes(x=v190, y=lost_child)) +
+    geom_boxplot(notch = FALSE, position = position_dodge(1)) +
+    labs(title = 'Boxplot of Children Ever Born across the Waelth Groups ',
+         x='Wealth Group',
+         y='Number of children ever born')
+
+ggplot(cleaned.outcome1.data, aes(x=v012, y=lost_child)) +
+  geom_point(aes(color = factor(v000)))
+
+
+```
+
+
+```{r}
+cleaned.outcome1.data$v000<- case_when((cleaned.outcome1.data$v000 == "AO7") ~ "Angola", 
+                                             (cleaned.outcome1.data$v000 == "EG6") ~ "Egypt",
+                                             (cleaned.outcome1.data$v000 == "ET7") ~ "Ethiopia",
+                                             (cleaned.outcome1.data$v000 == "GA6") ~ "Gabon",
+                                             (cleaned.outcome1.data$v000 == "GH6") ~ "Ghana",
+                                             (cleaned.outcome1.data$v000 == "KE6") ~ "Kenya",
+                                             (cleaned.outcome1.data$v000 == "ML7") ~ "Mali",
+                                             (cleaned.outcome1.data$v000 == "NG7") ~ "Nigeria",
+                                             (cleaned.outcome1.data$v000 == "ZA7") ~ "South Africa",
+                                             (cleaned.outcome1.data$v000 == "ZM7") ~ "Zambia",
+                                             (cleaned.outcome1.data$v000 == "ZW7") ~ "Zimbabwe")
+
+ready.outcome2.data$v000<- case_when((ready.outcome2.data$v000 == "AO7") ~ "Angola", 
+                                             (ready.outcome2.data$v000 == "EG6") ~ "Egypt",
+                                             (ready.outcome2.data$v000 == "ET7") ~ "Ethiopia",
+                                             (ready.outcome2.data$v000 == "GA6") ~ "Gabon",
+                                             (ready.outcome2.data$v000 == "GH6") ~ "Ghana",
+                                             (ready.outcome2.data$v000 == "KE6") ~ "Kenya",
+                                             (ready.outcome2.data$v000 == "ML7") ~ "Mali",
+                                             (ready.outcome2.data$v000 == "NG7") ~ "Nigeria",
+                                             (ready.outcome2.data$v000 == "ZA7") ~ "South Africa",
+                                             (ready.outcome2.data$v000 == "ZM7") ~ "Zambia",
+                                             (ready.outcome2.data$v000 == "ZW7") ~ "Zimbabwe")
+
+ready.outcome3.data$v000<- case_when((ready.outcome3.data$v000 == "AO7") ~ "Angola",
+                                             (ready.outcome3.data$v000 == "EG6") ~ "Egypt",
+                                             (ready.outcome3.data$v000 == "ET7") ~ "Ethiopia",
+                                             (ready.outcome3.data$v000 == "GA6") ~ "Gabon",
+                                             (ready.outcome3.data$v000 == "GH6") ~ "Ghana",
+                                             (ready.outcome3.data$v000 == "KE6") ~ "Kenya",
+                                             (ready.outcome3.data$v000 == "ML7") ~ "Mali",
+                                             (ready.outcome3.data$v000 == "NG7") ~ "Nigeria",
+                                             (ready.outcome3.data$v000 == "ZA7") ~ "South Africa",
+                                             (ready.outcome3.data$v000 == "ZM7") ~ "Zambia",
+                                             (ready.outcome3.data$v000 == "ZW7") ~ "Zimbabwe")
+
+```
+
+
+```{r}
+prop.child_loss<- aggregate(cleaned.outcome1.data$child_loss, list(cleaned.outcome1.data$v000), FUN=mean)
+p1<- ggplot(prop.child_loss, aes(x=reorder(Group.1, -x), y=round(x,digits = 2))) + 
+  geom_bar(stat="identity", position = position_dodge(), fill = "khaki4")+
+  geom_text(aes(label= round(x,digits = 2)), vjust=-0.2, position = position_dodge(0.9), color = "black", size=3) +
+  labs(title = 'Proportion of women to ever lost a child, by Country', x = 'Country', y = 'Proportion')
+
+
+prop.insurance<- aggregate(ready.outcome2.data$v481, list(ready.outcome2.data$v000), FUN=mean)
+q1<- ggplot(prop.insurance, aes(x=reorder(Group.1, -x), y=round(x,digits = 2))) + 
+  geom_bar(stat="identity", position = position_dodge(), fill = "indianred4")+
+  geom_text(aes(label= round(x,digits = 2)), vjust=-0.2, position = position_dodge(0.9), color = "black", size=3) +
+  labs(title = 'Proportion of women with health insurance coverage, by Country', x = 'Country', y = 'Proportion')
+
+
+prop.child_status<- aggregate(ready.outcome3.data$b5, list(ready.outcome3.data$v000), FUN=mean)
+r1<- ggplot(prop.child_status, aes(x=reorder(Group.1, x), y=round(1-x,digits = 2))) + 
+  geom_bar(stat="identity", position = position_dodge(), fill = "plum4")+
+  geom_text(aes(label= round(1-x,digits = 2)), vjust=-0.2, position = position_dodge(0.9), color = "black", size=3) +
+  labs(title = 'Proportion of women with child death from last 5-years birth record, by Country', x = 'Country', y = 'Proportion')
+
+p1; q1; r1
+
+```
+
+
+
+
+```{r}
+prop.child_loss<- aggregate(cleaned.outcome1.data$child_loss, list(cleaned.outcome1.data$v025), FUN=mean)
+p2<- ggplot(prop.child_loss, aes(x=reorder(Group.1, -x), y=round(x,digits = 2))) + 
+  geom_bar(stat="identity", position = position_dodge(), fill = "khaki4")+
+  geom_text(aes(label= round(x,digits = 2)), vjust=-0.2, position = position_dodge(0.9), color = "black", size=3) +
+  labs(title = 'Proportion of women to ever lost a child, by Region', x = 'Region', y = 'Proportion')
+
+
+prop.insurance<- aggregate(ready.outcome2.data$v481, list(cleaned.outcome2.data$v025), FUN=mean)
+q2<- ggplot(prop.insurance, aes(x=reorder(Group.1, -x), y=round(x,digits = 2))) + 
+  geom_bar(stat="identity", position = position_dodge(), fill = "indianred4")+
+  geom_text(aes(label= round(x,digits = 2)), vjust=-0.2, position = position_dodge(0.9), color = "black", size=3) +
+  labs(title = 'Proportion of women with health insurance coverage, by Region', x = 'Region', y = 'Proportion')
+
+
+prop.child_status<- aggregate(ready.outcome3.data$b5, list(cleaned.outcome3.data$v025), FUN=mean)
+r2<- ggplot(prop.child_status, aes(x=reorder(Group.1, x), y=round(1-x,digits = 2))) + 
+  geom_bar(stat="identity", position = position_dodge(), fill = "plum4")+
+  geom_text(aes(label= round(1-x,digits = 2)), vjust=-0.2, position = position_dodge(0.9), color = "black", size=3) +
+  labs(title = 'Proportion of women with child death from last 5-years birth record, by Region', x = 'Region', y = 'Proportion')
+
+p2; q2; r2
+```
+
+
+
+```{r}
+prop.child_loss<- aggregate(cleaned.outcome1.data$child_loss, list(cleaned.outcome1.data$v106), FUN=mean)
+p3<- ggplot(prop.child_loss, aes(x=reorder(Group.1, -x), y=round(x,digits = 2))) + 
+  geom_bar(stat="identity", position = position_dodge(), fill = "khaki4")+
+  geom_text(aes(label= round(x,digits = 2)), vjust=-0.2, position = position_dodge(0.9), color = "black", size=3) +
+  labs(title = 'Proportion of women to ever lost a child, by Level of Education', x = 'Level of Education', y = 'Proportion')
+
+prop.insurance<- aggregate(ready.outcome2.data$v481, list(cleaned.outcome2.data$v106), FUN=mean)
+q3<- ggplot(prop.insurance, aes(x=reorder(Group.1, -x), y=round(x,digits = 2))) + 
+  geom_bar(stat="identity", position = position_dodge(), fill = "indianred4")+
+  geom_text(aes(label= round(x,digits = 2)), vjust=-0.2, position = position_dodge(0.9), color = "black", size=3) +
+  labs(title = 'Proportion with health insurance coverage, by Level of Education', x = 'Level of Education', y = 'Proportion')
+
+
+prop.child_status<- aggregate(ready.outcome3.data$b5, list(cleaned.outcome3.data$v106), FUN=mean)
+r3<- ggplot(prop.child_status, aes(x=reorder(Group.1, x), y=round(1-x,digits = 2))) + 
+  geom_bar(stat="identity", position = position_dodge(), fill = "plum4")+
+  geom_text(aes(label= round(1-x,digits = 2)), vjust=-0.2, position = position_dodge(0.9), color = "black", size=3) +
+  labs(title = 'Proportion with child death from last 5-years birth record, by Level of Education', x = 'Level of Education', y = 'Proportion')
+
+p3; q3; r3
+```
+```{r}
+prop.child_loss<- aggregate(cleaned.outcome1.data$child_loss, list(cleaned.outcome1.data$v190), FUN=mean)
+p4<- ggplot(prop.child_loss, aes(x=reorder(Group.1, -x), y=round(x,digits = 2))) + 
+  geom_bar(stat="identity", position = position_dodge(), fill = "khaki4")+
+  geom_text(aes(label= round(x,digits = 2)), vjust=-0.2, position = position_dodge(0.9), color = "black", size=3) +
+  labs(title = 'Proportion of women to ever lost a child, by Wealth Class', x = 'Wealth Class', y = 'Proportion')
+
+
+prop.insurance<- aggregate(ready.outcome2.data$v481, list(cleaned.outcome2.data$v190), FUN=mean)
+q4<- ggplot(prop.insurance, aes(x=reorder(Group.1, -x), y=round(x,digits = 2))) + 
+  geom_bar(stat="identity", position = position_dodge(), fill = "indianred4")+
+  geom_text(aes(label= round(x,digits = 2)), vjust=-0.2, position = position_dodge(0.9), color = "black", size=3) +
+  labs(title = 'Proportion with health insurance coverage, by Wealth Class', x = 'Wealth Class', y = 'Proportion')
+
+
+prop.child_status<- aggregate(ready.outcome3.data$b5, list(cleaned.outcome3.data$v190), FUN=mean)
+r4<- ggplot(prop.child_status, aes(x=reorder(Group.1, x), y=round(1-x,digits = 2))) + 
+  geom_bar(stat="identity", position = position_dodge(), fill = "plum4")+
+  geom_text(aes(label= round(1-x,digits = 2)), vjust=-0.2, position = position_dodge(0.9), color = "black", size=3) +
+  labs(title = 'Proportion with child death from last 5-years birth record, by Wealth Class', x = 'Wealth Class', y = 'Proportion')
+
+p4; q4; r4
+
+```
+
+```{r}
+prop.child_loss<- aggregate(cleaned.outcome1.data$child_loss, list(cleaned.outcome1.data$v501b), FUN=mean)
+p5<- ggplot(prop.child_loss, aes(x=reorder(Group.1, -x), y=round(x,digits = 2))) + 
+  geom_bar(stat="identity", position = position_dodge(), fill = "khaki4")+
+  geom_text(aes(label= round(x,digits = 2)), vjust=-0.2, position = position_dodge(0.9), color = "black", size=3) +
+  labs(title = 'Proportion of women to ever lost a child, by Marital Status', x = 'Marital Status', y = 'Proportion')
+
+
+prop.insurance<- aggregate(ready.outcome2.data$v481, list(cleaned.outcome2.data$v501b), FUN=mean)
+q5<- ggplot(prop.insurance, aes(x=reorder(Group.1, -x), y=round(x,digits = 2))) + 
+  geom_bar(stat="identity", position = position_dodge(), fill = "indianred4")+
+  geom_text(aes(label= round(x,digits = 2)), vjust=-0.2, position = position_dodge(0.9), color = "black", size=3) +
+  labs(title = 'Proportion with health insurance coverage, by Marital Status', x = 'Marital Status', y = 'Proportion')
+
+
+prop.child_status<- aggregate(ready.outcome3.data$b5, list(cleaned.outcome3.data$v501b), FUN=mean)
+r5<- ggplot(prop.child_status, aes(x=reorder(Group.1, x), y=round(1-x,digits = 2))) + 
+  geom_bar(stat="identity", position = position_dodge(), fill = "plum4")+
+  geom_text(aes(label= round(1-x,digits = 2)), vjust=-0.2, position = position_dodge(0.9), color = "black", size=3) +
+  labs(title = 'Proportion with child death from last 5-years birth record, by Marital Status', x = 'Marital Status', y = 'Proportion')
+
+p5; q5; r5
+
+```
+
+```{r}
+prop.child_loss<- aggregate(cleaned.outcome1.data$child_loss, list(cleaned.outcome1.data$v228), FUN=mean)
+p6<- ggplot(prop.child_loss, aes(x=reorder(Group.1, -x), y=round(x,digits = 2))) + 
+  geom_bar(stat="identity", position = position_dodge(), fill = "khaki4")+
+  geom_text(aes(label= round(x,digits = 2)), vjust=-0.2, position = position_dodge(0.9), color = "black", size=3) +
+  labs(title = 'Proportion of women to ever lost a child, by Pregnancy Termination Status', x = 'Ever terminated pregnancy', y = 'Proportion')
+
+
+prop.insurance<- aggregate(ready.outcome2.data$v481, list(cleaned.outcome2.data$v228), FUN=mean)
+q6<- ggplot(prop.insurance, aes(x=reorder(Group.1, -x), y=round(x,digits = 2))) + 
+  geom_bar(stat="identity", position = position_dodge(), fill = "indianred4")+
+  geom_text(aes(label= round(x,digits = 2)), vjust=-0.2, position = position_dodge(0.9), color = "black", size=3) +
+  labs(title = 'Proportion with health insurance coverage, by Pregnancy Termination Status', x = 'Pregnancy Termination Status', y = 'Proportion')
+
+
+prop.child_status<- aggregate(ready.outcome3.data$b5, list(cleaned.outcome3.data$v228), FUN=mean)
+r6<- ggplot(prop.child_status, aes(x=reorder(Group.1, x), y=round(1-x,digits = 2))) + 
+  geom_bar(stat="identity", position = position_dodge(), fill = "plum4")+
+  geom_text(aes(label= round(1-x,digits = 2)), vjust=-0.2, position = position_dodge(0.9), color = "black", size=3) +
+  labs(title = 'Proportion with child death from last 5-years birth record, by Pregnancy Termination Status', x = 'Pregnancy Termination Status', y = 'Proportion')
+
+p6; q6; r6
+```
+
+
+```{r}
+prop.child_loss<- aggregate(cleaned.outcome1.data$child_loss, list(cleaned.outcome1.data$smoke), FUN=mean)
+
+ggplot(prop.child_loss, aes(x=reorder(Group.1, -x), y=round(x,digits = 2))) + 
+  geom_bar(stat="identity", position = position_dodge())+
+  geom_text(aes(label= round(x,digits = 2)), vjust=-0.2, position = position_dodge(0.9), color = "black", size=3) +
+  labs(title = 'Proportion of lost children by Smoking status', x = 'Smokes', y = 'Proportion of lost children')
+```
+
+
+```{r}
+p<- ggarrange(
+  p1, p2, p3, p4, p5, p6,
+  ncol=2, nrow=3,
+  font.label = list(size=5))
+
+q<- ggarrange(
+  q1, q2, q3, q4, q5, q6,
+  ncol=2, nrow=3,
+  font.label = list(size=5))
+
+r<- ggarrange(
+  r1, r2, r3, r4, r5, r6,
+  ncol=2, nrow=3,
+  font.label = list(size=5))
+
+p; q; r
+```
+
+
+
+```{r}
+ready.outcome1.data<- dummy_cols(cleaned.outcome1.data, select_columns = c('v000', 'v501b'))
+ready.outcome1.data$v013 <- case_when((ready.outcome1.data$v013 == "15-19") ~ 1,
+           (ready.outcome1.data$v013 == "20-24") ~ 2,
+           (ready.outcome1.data$v013 == "25-29") ~ 3,
+           (ready.outcome1.data$v013 == "30-34") ~ 4,
+           (ready.outcome1.data$v013 == "35-39") ~ 5,
+           (ready.outcome1.data$v013 == "40-44") ~ 6,
+           (ready.outcome1.data$v013 == "45-49") ~ 7)
+
+ready.outcome1.data$v025<- case_when((ready.outcome1.data$v025 == "rural") ~ 0,
+           (ready.outcome1.data$v025 == "urban") ~ 1)
+
+ready.outcome1.data$v106<- case_when((ready.outcome1.data$v106 == "no education") ~ 1,
+           (ready.outcome1.data$v106 == "primary") ~ 2,
+           (ready.outcome1.data$v106 == "secondary") ~ 3,
+           (ready.outcome1.data$v106 == "higher") ~ 4)
+
+ready.outcome1.data$v190<- case_when((ready.outcome1.data$v190 == "poorest") ~ 1,
+           (ready.outcome1.data$v190 == "poorer") ~ 2,
+           (ready.outcome1.data$v190 == "middle") ~ 3,
+           (ready.outcome1.data$v190 == "richer") ~ 4,
+           (ready.outcome1.data$v190 == "richest") ~ 5)
+
+ready.outcome1.data$first.sex<- case_when((ready.outcome1.data$first.sex == "<18 years") ~ 1,
+           (ready.outcome1.data$first.sex == "18-24 years") ~ 2,
+           (ready.outcome1.data$first.sex == "25-29 years") ~ 3,
+           (ready.outcome1.data$first.sex == "30+ years") ~ 4)
+
+ready.outcome1.data$v228<- case_when((ready.outcome1.data$v228 == "no") ~ 0,
+           (ready.outcome1.data$v228 == "yes") ~ 1)
+
+ready.outcome1.data$smoke<- case_when((ready.outcome1.data$smoke == "b: No") ~ 0,
+           (ready.outcome1.data$smoke == "a: Yes") ~ 1)
+
+write.csv(ready.outcome1.data,"C:\\UNO Class Doc\\Advanced Stat Machine Learning\\ready.outcome1.csv", row.names = FALSE)
+
+```
+
+
+```{r}
+ready.outcome2.data<- dummy_cols(cleaned.outcome2.data, select_columns = c('v000', 'v501b'))
+
+ready.outcome2.data$v013 <- case_when((ready.outcome2.data$v013 == "15-19") ~ 1,
+           (ready.outcome2.data$v013 == "20-24") ~ 2,
+           (ready.outcome2.data$v013 == "25-29") ~ 3,
+           (ready.outcome2.data$v013 == "30-34") ~ 4,
+           (ready.outcome2.data$v013 == "35-39") ~ 5,
+           (ready.outcome2.data$v013 == "40-44") ~ 6,
+           (ready.outcome2.data$v013 == "45-49") ~ 7)
+
+ready.outcome2.data$v025<- case_when((ready.outcome2.data$v025 == "rural") ~ 0,
+           (ready.outcome2.data$v025 == "urban") ~ 1)
+
+ready.outcome2.data$v106<- case_when((ready.outcome2.data$v106 == "no education") ~ 1,
+           (ready.outcome2.data$v106 == "primary") ~ 2,
+           (ready.outcome2.data$v106 == "secondary") ~ 3,
+           (ready.outcome2.data$v106 == "higher") ~ 4)
+
+ready.outcome2.data$v190<- case_when((ready.outcome2.data$v190 == "poorest") ~ 1,
+           (ready.outcome2.data$v190 == "poorer") ~ 2,
+           (ready.outcome2.data$v190 == "middle") ~ 3,
+           (ready.outcome2.data$v190 == "richer") ~ 4,
+           (ready.outcome2.data$v190 == "richest") ~ 5)
+
+ready.outcome2.data$v228<- case_when((ready.outcome2.data$v228 == "no") ~ 0,
+           (ready.outcome2.data$v228 == "yes") ~ 1)
+
+ready.outcome2.data$v213<- case_when((ready.outcome2.data$v213 == "no or unsure") ~ 0,
+           (ready.outcome2.data$v213 == "yes") ~ 1)
+
+ready.outcome2.data$m14<- case_when((ready.outcome2.data$m14 == "a: No ANC visit") ~ 1,
+           (ready.outcome2.data$m14 == "b: Insufficient ANC visit") ~ 2,
+           (ready.outcome2.data$m14 == "c: Sufficient ANC visit") ~ 3)
+
+ready.outcome2.data$ANC.facility<- case_when((ready.outcome2.data$ANC.facility == "b: No") ~ 0,
+           (ready.outcome2.data$ANC.facility == "a: Yes") ~ 1)
+
+ready.outcome2.data$v312<- case_when((ready.outcome2.data$v312 == "None") ~ 1,
+           (ready.outcome2.data$v312 == "Non-modern") ~ 2,
+           (ready.outcome2.data$v312 == "Modern") ~ 3)
+
+ready.outcome2.data$m15<- case_when((ready.outcome2.data$m15 == "Out-of-facility") ~ 0,
+           (ready.outcome2.data$m15 == "Health facility") ~ 1)
+
+ready.outcome2.data$v401<- case_when((ready.outcome2.data$v401 == "no") ~ 0,
+           (ready.outcome2.data$v401 == "yes") ~ 1)
+
+ready.outcome2.data$v481<- case_when((ready.outcome2.data$v481 == "no") ~ 0,
+           (ready.outcome2.data$v481 == "yes") ~ 1)
+
+write.csv(ready.outcome2.data,"C:\\UNO Class Doc\\Advanced Stat Machine Learning\\ready.outcome2.csv", row.names = FALSE)
+
+```
+
+```{r}
+
+ready.outcome3.data<- dummy_cols(cleaned.outcome3.data, select_columns = c('v000', 'v501b'))
+
+ready.outcome3.data$v013<- case_when((ready.outcome3.data$v013 == "15-19") ~ 1,
+           (ready.outcome3.data$v013 == "20-24") ~ 2,
+           (ready.outcome3.data$v013 == "25-29") ~ 3,
+           (ready.outcome3.data$v013 == "30-34") ~ 4,
+           (ready.outcome3.data$v013 == "35-39") ~ 5,
+           (ready.outcome3.data$v013 == "40-44") ~ 6,
+           (ready.outcome3.data$v013 == "45-49") ~ 7)
+
+ready.outcome3.data$v025<- case_when((ready.outcome3.data$v025 == "rural") ~ 0,
+           (ready.outcome3.data$v025 == "urban") ~ 1)
+
+ready.outcome3.data$v106<- case_when((ready.outcome3.data$v106 == "no education") ~ 1,
+           (ready.outcome3.data$v106 == "primary") ~ 2,
+           (ready.outcome3.data$v106 == "secondary") ~ 3,
+           (ready.outcome3.data$v106 == "higher") ~ 4)
+
+ready.outcome3.data$v190<- case_when((ready.outcome3.data$v190 == "poorest") ~ 1,
+           (ready.outcome3.data$v190 == "poorer") ~ 2,
+           (ready.outcome3.data$v190 == "middle") ~ 3,
+           (ready.outcome3.data$v190 == "richer") ~ 4,
+           (ready.outcome3.data$v190 == "richest") ~ 5)
+
+ready.outcome3.data$v228<- case_when((ready.outcome3.data$v228 == "no") ~ 0,
+           (ready.outcome3.data$v228 == "yes") ~ 1)
+
+ready.outcome3.data$ANC.facility<-case_when((ready.outcome3.data$ANC.facility == "b: No") ~ 0,
+           (ready.outcome3.data$ANC.facility == "a: Yes") ~ 1)
+
+ready.outcome3.data$m15<- case_when((ready.outcome3.data$m15 == "Out-of-facility") ~ 0,
+           (ready.outcome3.data$m15 == "Health facility") ~ 1)
+
+ready.outcome3.data$v401<- case_when((ready.outcome3.data$v401 == "no") ~ 0,
+           (ready.outcome3.data$v401 == "yes") ~ 1)
+
+ready.outcome3.data$b0<- case_when((ready.outcome3.data$b0 == "Single") ~ 0,
+           (ready.outcome3.data$b0 == "Multiple") ~ 1)
+
+ready.outcome3.data$b5<- case_when((ready.outcome3.data$b5 == "no") ~ 0,
+           (ready.outcome3.data$b5 == "yes") ~ 1)
+
+ready.outcome3.data$b4<- case_when((ready.outcome3.data$b4 == "female") ~ 0,
+           (ready.outcome3.data$b4 == "male") ~ 1)
+
+ready.outcome3.data$b20<- case_when((ready.outcome3.data$b20 == "a: Preterm") ~ 1,
+           (ready.outcome3.data$b20 == "b: Term") ~ 2,
+           (ready.outcome3.data$b20 == "c: Post-term") ~ 3)
+
+ready.outcome3.data$child.status<- case_when((ready.outcome3.data$child.status == "Alive: <=1 yr old") ~ 1,
+           (ready.outcome3.data$child.status == "Alive: >1 yr old") ~ 2,
+           (ready.outcome3.data$child.status == "Dead: After 1st year") ~ 3,
+           (ready.outcome3.data$child.status == "Dead: Within 1st year") ~ 4)
+
+write.csv(ready.outcome3.data,"C:\\UNO Class Doc\\Advanced Stat Machine Learning\\ready.outcome3.csv", row.names = FALSE)
+
+```
+
+
+```{r}
+library(caTools)
+library(ROCR)
+
+split<- sample.split(ready.outcome1.data, SplitRatio = 0.8)
+
+outcome1.train<- subset(ready.outcome1.data, split== "TRUE")
+outcome1.test<- subset(ready.outcome1.data, split== "FALSE")
+
+logistic_model1<- glm(child_loss ~ as.factor(v013) + as.factor(v025) +
+                        as.factor(v106) + as.factor(v190) + as.factor(first.sex) +
+                        as.factor(v228) + as.factor(smoke) +
+                        as.factor(`v501b_Formerly married`) +
+                        as.factor(`v501b_Never married`) +
+                        as.factor(v000_AO7) + as.factor(v000_EG6) +
+                        as.factor(v000_ET7) + as.factor(v000_GA6) +
+                        as.factor(v000_GH6) + as.factor(v000_KE6) +
+                        as.factor(v000_ML7) + as.factor(v000_ZA7) +
+                        as.factor(v000_ZM7) + as.factor(v000_ZW7),
+                      data = outcome1.train,
+                      family = "binomial")
+summary(logistic_model1)
+logistic_model1
+
+predict_model1<- predict(logistic_model1, outcome1.test, type="response")
+predict_model1<- ifelse(predict_model1 > 0.5, 1, 0)
+
+table(outcome1.test$child_loss, predict_model1)
+
+wrong_class<- mean(predict_model1 != outcome1.test$child_loss)
+print(paste('Accuracy =', 1 - wrong_class))
+
+correct_class<- mean(predict_model1 == outcome1.test$child_loss)
+print(paste('Accuracy =', correct_class))
+
+ROCPred<- prediction(predict_model1, outcome1.test$child_loss)
+ROCPerf<- performance(ROCPred, measure = "tpr", x.measure = "fpr")
+AUC<- performance(ROCPred, measure = "auc")
+AUC<- AUC@y.values[[1]]
+AUC
+
+plot(ROCPerf)
+plot(ROCPerf, colorize = TRUE,
+     print.cutoffs.at = seq(0.1, by = 0.1),
+     main = "ROC Curve")
+abline(a=0, b=1)
+
+AUC<- round(AUC, 4)
+legend(0.6,0.4, AUC, title = "AUC", cex=1)
+
+exp(cbind (OR = coef(logistic_model1), confint(logistic_model1)))
+
+
+```
+
+```{r}
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(ggmosaic)
+library(fastDummies)
+library(ggpubr)
+```
+
+
+```{r}
+data.countries <- read.csv("C:\\Glean Files\\Jomiloju\\Machine Learning Project Data\\Dataset (All Countries).csv")
+lapply(data.countries,unique)
+variable.names(data.countries)
+```
+
+```{r}
+data.countries$v013<- as.factor(data.countries$v013)
+
+data.countries$v013<- type.convert(data.countries$v013, as.is = FALSE)
+data.countries$v190<- type.convert(data.countries$v190, as.is = TRUE)
+data.countries$v228<- gsub("9", "", as.character(data.countries$v228))
+data.countries$v401<- gsub("9", "", as.character(data.countries$v401))
+data.countries$v463a<- gsub("9", "", as.character(data.countries$v463a))
+data.countries$v463b<- gsub("9", "", as.character(data.countries$v463b))
+data.countries$v463b<- gsub("9", "", as.character(data.countries$v463b))
+data.countries$v463x<- gsub("9", "", as.character(data.countries$v463x))
+data.countries$v481<- gsub("9", "", as.character(data.countries$v481))
+
+data.countries$v525<- gsub("99", "", as.character(data.countries$v525))
+data.countries$v525<- gsub("inconsistent", "", as.character(data.countries$v525))
+data.countries$v525<- gsub("don't know", "", as.character(data.countries$v525))
+
+data.countries$v531<- gsub("99", "", as.character(data.countries$v531))
+data.countries$v531<- gsub("inconsistent", "", as.character(data.countries$v531))
+data.countries$v531<- gsub("don't know", "", as.character(data.countries$v531))
+data.countries$v531<- type.convert(data.countries$v531, as.is = TRUE)
+
+data.countries$v701<- gsub("don't know", "", as.character(data.countries$v701))
+data.countries$v701<- gsub("9", "", as.character(data.countries$v701))
+
+data.countries$m13<- gsub("don't know", "", as.character(data.countries$m13))
+data.countries$m13<- gsub("99", "", as.character(data.countries$m13))
+data.countries$m13<- type.convert(data.countries$m13, as.is = TRUE)
+
+data.countries$m14<- gsub("don't know", "", as.character(data.countries$m14))
+data.countries$m14<- gsub("99", "", as.character(data.countries$m14))
+data.countries$m14<- gsub("no antenatal visits", "0", as.character(data.countries$m14))
+data.countries$m14<- type.convert(data.countries$m14, as.is = TRUE)
+
+data.countries$m15<- gsub("99", "", as.character(data.countries$m15))
+
+data.countries$b6<- gsub("999", "", as.character(data.countries$b6))
+data.countries$b6<- gsub("died on day of birth", "100", as.character(data.countries$b6))
+data.countries$b6<- gsub("days: 1", "101", as.character(data.countries$b6))
+data.countries$b6<- gsub("months: 1", "201", as.character(data.countries$b6))
+data.countries$b6<- gsub("years: 1", "301", as.character(data.countries$b6))
+
+data.countries$m17<- gsub("9", "", as.character(data.countries$m17))
+
+data.countries$m18<- gsub("9", "", as.character(data.countries$m18))
+data.countries$m18<- gsub("don't know", "", as.character(data.countries$m18))
+
+data.countries$m57e<- gsub("9", "", as.character(data.countries$m57e))
+data.countries$m57f<- gsub("9", "", as.character(data.countries$m57f))
+data.countries$m57g<- gsub("9", "", as.character(data.countries$m57g))
+data.countries$m57h<- gsub("9", "", as.character(data.countries$m57h))
+data.countries$m57m<- gsub("9", "", as.character(data.countries$m57m))
+data.countries$m57n<- gsub("9", "", as.character(data.countries$m57n))
+
+
+data.countries<- data.countries %>%
+  mutate(v312=recode(v312, "not using" = "None","lactational amenorrhea (lam)" = "Modern", "male condom" = "Modern", 
+                                                     "periodic abstinence" = "Non-modern", "pill" = "Modern", "implants/norplant" = "Modern", "injections" = "Modern",
+                                                     "withdrawal" = "Non-modern", "female sterilization" = "Modern", "iud" = "Modern", "other traditional" = "Non-modern",
+                                                     "female condom" = "Modern", "emergency contraception" = "Modern", "other modern method" = "Modern", "standard days method (sdm)" = "Modern",
+                                                     "diaphragm" = "Modern", "male sterilization" = "Modern", "specific method 2" = "Non-modern", "specific method 1" = "Non-modern"),
+                          v501a=recode(v501,"married" = "Married", "living with partner" = "Unmarried", "no longer living together/separated" = "Unmarried", 
+                                       "never in union" = "Unmarried", "widowed" = "Unmarried", "divorced" = "Unmarried"),
+                          v501b=recode(v501,"married" = "Married", "living with partner" = "Never married", "no longer living together/separated" = "Formerly married", "never in union" = "Never married", "widowed" = "Formerly married", "divorced" = "Formerly married"),
+                          b0=recode(b0, "single birth" = "Single", "2nd of multiple" = "Multiple", "1st of multiple" = "Multiple", "3rd of multiple" = "Multiple"),
+                          m15=recode(m15,"24" = "Health facility", "25" = "Health facility", "27" = "Health facility", "32" = "Health facility", "33" = "Health facility",
+                                                    "34" = "Health facility", "government hospital" = "Health facility", "private hospital/clinic" = "Health facility", 
+                                                    "government health center" = "Health facility", "government health post" = "Health facility", "other private sector" = "Health facility",
+                                                    "other public sector" = "Health facility", "respondent's home" = "Out-of-facility", "other home" = "Out-of-facility", "other" = "Out-of-facility",
+                                                    "41" = "Out-of-facility", "42" = "Out-of-facility", "43" = "Out-of-facility", "44" = "Out-of-facility", "46" = "Out-of-facility"))
+
+
+
+data.countries$b7<- case_when((data.countries$b7== 0) ~ "a: <1 month",
+          (data.countries$b7>= 1) & (data.countries$b7 <= 6) ~ "b: 1-6 months",
+          (data.countries$b7>=7) & (data.countries$b7<=12) ~ "c: 7-12 months",
+          (data.countries$b7>=13) ~ "d: After 1-year"
+          )
+
+data.countries$b20<- case_when((data.countries$b20>=4) & (data.countries$b20<=8) ~ "a: Preterm",
+          (data.countries$b20 == 9) ~ "b: Term",
+          (data.countries$b20 == 10) ~ "c: Post-term"
+          )
+
+data.countries$b11<- case_when((data.countries$b11>=6) & (data.countries$b11<12) ~ "a: <12 months",
+          (data.countries$b11>=12) & (data.countries$b11<=23) ~ "b: 12-23 months",
+          (data.countries$b11>=24) & (data.countries$b11<=60) ~ "c: 2-5 years",
+          (data.countries$b11>60) ~ "d: >5 years"
+          )
+
+data.countries$m13<- case_when ((data.countries$m13>=0) & (data.countries$m13<4) ~ "a: First trimester",
+           (data.countries$m13>=4) & (data.countries$m13<7) ~ "b: Second trimester",
+           (data.countries$m13>=7) & (data.countries$m13<=10) ~ "c: Third trimester"
+           )
+
+data.countries$m14<- case_when ((data.countries$m14 == 0) ~ "a: No ANC visit",
+           (data.countries$m14>=1) & (data.countries$m14 <8) ~ "b: Insufficient ANC visit",
+           (data.countries$m14>=8) & (data.countries$m14<=90) ~ "c: Sufficient ANC visit"
+           )
+
+data.countries<- data.countries %>%
+  mutate(ANC = case_when((data.countries$m14 == "a: No ANC visit") ~ "0",
+                                (data.countries$m14 == "b: Insufficient ANC visit") & (data.countries$m13 == "a: First trimester") ~ "1",
+                                (data.countries$m14 == "b: Insufficient ANC visit") & (data.countries$m13 == "b: Second trimester") ~ "2",
+                                (data.countries$m14 == "b: Insufficient ANC visit") & (data.countries$m13 == "c: Third trimester") ~ "3",
+                                (data.countries$m14 == "c: Sufficient ANC visit") & (data.countries$m13 == "a: First trimester") ~ "4",
+                                (data.countries$m14 == "c: Sufficient ANC visit") & (data.countries$m13 == "b: Second trimester") ~ "5",
+                                (data.countries$m14 == "c: Sufficient ANC visit") & (data.countries$m13 == "c: Third trimester") ~ "6")
+         )
+
+data.countries<- data.countries %>%
+  mutate(ever.child = case_when((data.countries$v218 < 2) ~ "0-1 child",
+                                (data.countries$v218>=2) & (data.countries$v218<4) ~ "2-3 chidlren",
+                                (data.countries$v218>=4) ~ "4+ children"),
+         first.sex = case_when((data.countries$v531 < 18) ~ "<18 years",
+                              (data.countries$v531<=18) & (data.countries$v531<25) ~ "18-24 years",
+                              (data.countries$v531<=25) & (data.countries$v531<30) ~ "25-29 years",
+                              (data.countries$v531>=30) ~ "30+ years"),
+         child.status = case_when((data.countries$b5=="yes") & (data.countries$b8<=1) ~ "Alive: <=1 yr old",
+                                  (data.countries$b5=="yes") & (data.countries$b8>1) ~ "Alive: >1 yr old",
+                                  (data.countries$b5=="no") & (data.countries$b7=="a: <1 month" | data.countries$b7=="b: 1-6 months" | 
+                                                                 data.countries$b7=="c: 7-12 months") ~ "Dead: Within 1st year",
+                                  (data.countries$b5=="no") & (data.countries$b7=="d: After 1-year") ~ "Dead: After 1st year")
+         )
+
+
+data.countries<- data.countries %>%
+  mutate(smoke= case_when ((data.countries$v463a == "yes") | (data.countries$v463b == "yes") | (data.countries$v463e == "yes") |
+                           (data.countries$v463f == "yes") | (data.countries$v463g == "yes") | (data.countries$v463j == "yes") | 
+                           (data.countries$v463k == "yes") | (data.countries$v463l == "yes") | (data.countries$v463x == "yes") ~ "a: Yes",
+                           (data.countries$v463a == "no" | data.countries$v463a == "") &
+                           (data.countries$v463b == "no" | data.countries$v463b == "") &
+                           (data.countries$v463e == "no" | data.countries$v463e == "") &
+                           (data.countries$v463f == "no" | data.countries$v463f == "") & 
+                           (data.countries$v463g == "no" | data.countries$v463g == "") & 
+                           (data.countries$v463j == "no" | data.countries$v463j == "") & 
+                           (data.countries$v463k == "no" | data.countries$v463k == "") & 
+                           (data.countries$v463l == "no" | data.countries$v463l == "") & 
+                           (data.countries$v463x == "no" | data.countries$v463x == "") ~ "b: No"))
+
+data.countries<- data.countries %>%
+  mutate(ANC.facility= case_when((data.countries$m57e == "yes") | (data.countries$m57f == "yes") | (data.countries$m57g == "yes") |
+                             (data.countries$m57h == "yes") | (data.countries$m57m == "yes") | (data.countries$m57n == "yes")~ "a: Yes",
+                             (data.countries$m57e == "no" | data.countries$m57e == "") &
+                             (data.countries$m57f == "no" | data.countries$m57f == "") &
+                             (data.countries$m57g == "no" | data.countries$m57g == "") &
+                             (data.countries$m57h == "no" | data.countries$m57h == "") &
+                             (data.countries$m57m == "no" | data.countries$m57m == "") & 
+                             (data.countries$m57n == "no" | data.countries$m57n == "") ~ "b: No"))
+
+data.countries<- data.countries %>%
+  mutate(n_lostchild = v201 - v218)
+
+data.countries<- data.countries %>%
+  mutate(child_loss= case_when((data.countries$n_lostchild == 0) ~ 0,
+                             (data.countries$n_lostchild > 0) ~ 1))
+
+data.countries<- data.countries %>%
+  mutate(lost_child= case_when((data.countries$n_lostchild == 0) ~ 0,
+                             (data.countries$n_lostchild == 1) ~ 1,
+         (data.countries$n_lostchild > 1) ~ 2))
+
+
+data.countries$v228<- case_when((data.countries$v228 == "yes") ~ "yes", 
+                                 (data.countries$v228 == "no") ~ "no")
+
+data.countries$v401<- case_when((data.countries$v401 == "yes") ~ "yes", 
+                                (data.countries$v401 == "no") ~ "no")
+
+data.countries$v481<- case_when((data.countries$v481 == "yes") ~ "yes", 
+                                (data.countries$v481 == "no") ~ "no")
+
+data.countries$v701<- case_when((data.countries$v701 == "higher") ~ "higher", 
+                                (data.countries$v701 == "no education") ~ "no education",
+                                (data.countries$v701 == "primary") ~ "primary", 
+                                (data.countries$v701 == "secondary") ~ "secondary")
+
+data.countries$m15<- case_when((data.countries$m15 == "Health facility") ~ "Health facility", 
+                               (data.countries$m15 == "Out-of-facility") ~ "Out-of-facility")
+
+
+data.countries$m17<- case_when((data.countries$m17 == "yes") ~ "yes", 
+                               (data.countries$m17 == "no") ~ "no")
+
+data.countries$m18<- case_when((data.countries$m18 == "average") ~ "average", 
+                               (data.countries$m18 == "larger than average") ~ "larger than average",
+                               (data.countries$m18 == "smaller than average") ~ "smaller than average",
+                               (data.countries$m18 == "very large") ~ "very large",
+                               (data.countries$m18 == "very small") ~ "very small")
+
+
+
+data.countries<- subset(data.countries, select = -c(v463a,v463b,v463e,v463f,v463g,v463j,v463k,v463l,v463x,v463z,v525,v190a,v102,hw1,b6, m57e,m57f,m57g,m57h,m57m,m57n))
+
+names(which(colSums(is.na(data.countries))>0))
+
+```
+
+
+```{r}
+#Dataset for Individual Outcome
+outcome1.data<- subset(data.countries, select = c(v000,v007,v012,v013,v025,v106,v190,v501,v501a,v501b,v531,first.sex,v228,smoke,v201,v218, n_lostchild, child_loss,lost_child))
+
+outcome2.data<- subset(data.countries, select = c(v000,v007,v012,v013,v025,v106,v190,v501,v501a,v501b,v213,v228,m14,ANC.facility,v312,m15,v401,v481,child_loss))
+
+outcome3.data<- subset(data.countries, select = c(v000,v007,v013,v025,v106,v190,v501,v501a,v501b,b0,b4,b5,b20,v228,m15,v401,ANC.facility,child.status))
+
+cleaned.outcome1.data<- outcome1.data %>% 
+  drop_na()
+
+cleaned.outcome2.data<- outcome2.data %>% 
+  drop_na()
+
+cleaned.outcome3.data<- outcome3.data %>% 
+  drop_na()
+
+data.nomiss<- subset(data.countries, select = c(names(which(colSums(is.na(data.countries))==0))))
+
+```
+
+
+
+```{r}
+write.csv(data.nomiss,"C:\\UNO Class Doc\\Advanced Stat Machine Learning\\cleaned.csv", row.names = FALSE)
+
+write.csv(data.countries,"C:\\UNO Class Doc\\Advanced Stat Machine Learning\\full_data.csv", row.names = FALSE)
+```
+
+
+```{r}
+write.csv(cleaned.outcome1.data,"C:\\UNO Class Doc\\Advanced Stat Machine Learning\\outcome1.csv", row.names = FALSE)
+write.csv(cleaned.outcome2.data,"C:\\UNO Class Doc\\Advanced Stat Machine Learning\\outcome2.csv", row.names = FALSE)
+write.csv(cleaned.outcome3.data,"C:\\UNO Class Doc\\Advanced Stat Machine Learning\\outcome3.csv", row.names = FALSE)
+
+```
+
+
+```{r}
+ggplot(cleaned.outcome1.data, aes(x=v000, y=lost_child, fill=v025)) +
+    geom_boxplot(notch = FALSE, position = position_dodge(1)) +
+    labs(title = 'Boxplot of Children Ever Born across the African Countries ',
+         x='Country',
+         y='Number of children ever born')
+
+ggplot(cleaned.outcome1.data, aes(x=v000, y=lost_child)) +
+    geom_boxplot(notch = FALSE, position = position_dodge(1)) +
+    labs(title = 'Boxplot of Children Ever Born across the African Countries',
+         x='Country',
+         y='Number of children ever born')
+
+ggplot(cleaned.outcome1.data, aes(x=v025, y=lost_child)) +
+    geom_boxplot(notch = FALSE, position = position_dodge(1)) +
+    labs(title = 'Boxplot of Children Ever Born by region of residence',
+         x='Region of residence',
+         y='Number of children ever born')
+
+ggplot(cleaned.outcome1.data, aes(x=v106, y=lost_child)) +
+    geom_boxplot(notch = FALSE, position = position_dodge(1)) +
+    labs(title = 'Boxplot of Children Ever Born by level of education',
+         x='Level of education',
+         y='Number of children ever born')
+
+ggplot(cleaned.outcome1.data, aes(x=v190, y=lost_child)) +
+    geom_boxplot(notch = FALSE, position = position_dodge(1)) +
+    labs(title = 'Boxplot of Children Ever Born across the Waelth Groups ',
+         x='Wealth Group',
+         y='Number of children ever born')
+
+ggplot(cleaned.outcome1.data, aes(x=v012, y=lost_child)) +
+  geom_point(aes(color = factor(v000)))
+
+
+```
+```{r}
+cleaned.outcome1.data$v000<- case_when((cleaned.outcome1.data$v000 == "AO7") ~ "Angola", 
+                                             (cleaned.outcome1.data$v000 == "EG6") ~ "Egypt",
+                                             (cleaned.outcome1.data$v000 == "ET7") ~ "Ethiopia",
+                                             (cleaned.outcome1.data$v000 == "GA6") ~ "Gabon",
+                                             (cleaned.outcome1.data$v000 == "GH6") ~ "Ghana",
+                                             (cleaned.outcome1.data$v000 == "KE6") ~ "Kenya",
+                                             (cleaned.outcome1.data$v000 == "ML7") ~ "Mali",
+                                             (cleaned.outcome1.data$v000 == "NG7") ~ "Nigeria",
+                                             (cleaned.outcome1.data$v000 == "ZA7") ~ "South Africa",
+                                             (cleaned.outcome1.data$v000 == "ZM7") ~ "Zambia",
+                                             (cleaned.outcome1.data$v000 == "ZW7") ~ "Zimbabwe")
+
+ready.outcome2.data$v000<- case_when((ready.outcome2.data$v000 == "AO7") ~ "Angola", 
+                                             (ready.outcome2.data$v000 == "EG6") ~ "Egypt",
+                                             (ready.outcome2.data$v000 == "ET7") ~ "Ethiopia",
+                                             (ready.outcome2.data$v000 == "GA6") ~ "Gabon",
+                                             (ready.outcome2.data$v000 == "GH6") ~ "Ghana",
+                                             (ready.outcome2.data$v000 == "KE6") ~ "Kenya",
+                                             (ready.outcome2.data$v000 == "ML7") ~ "Mali",
+                                             (ready.outcome2.data$v000 == "NG7") ~ "Nigeria",
+                                             (ready.outcome2.data$v000 == "ZA7") ~ "South Africa",
+                                             (ready.outcome2.data$v000 == "ZM7") ~ "Zambia",
+                                             (ready.outcome2.data$v000 == "ZW7") ~ "Zimbabwe")
+
+ready.outcome3.data$v000<- case_when((ready.outcome3.data$v000 == "AO7") ~ "Angola",
+                                             (ready.outcome3.data$v000 == "EG6") ~ "Egypt",
+                                             (ready.outcome3.data$v000 == "ET7") ~ "Ethiopia",
+                                             (ready.outcome3.data$v000 == "GA6") ~ "Gabon",
+                                             (ready.outcome3.data$v000 == "GH6") ~ "Ghana",
+                                             (ready.outcome3.data$v000 == "KE6") ~ "Kenya",
+                                             (ready.outcome3.data$v000 == "ML7") ~ "Mali",
+                                             (ready.outcome3.data$v000 == "NG7") ~ "Nigeria",
+                                             (ready.outcome3.data$v000 == "ZA7") ~ "South Africa",
+                                             (ready.outcome3.data$v000 == "ZM7") ~ "Zambia",
+                                             (ready.outcome3.data$v000 == "ZW7") ~ "Zimbabwe")
+
+```
+
+
+```{r}
+prop.child_loss<- aggregate(cleaned.outcome1.data$child_loss, list(cleaned.outcome1.data$v000), FUN=mean)
+p1<- ggplot(prop.child_loss, aes(x=reorder(Group.1, -x), y=round(x,digits = 2))) + 
+  geom_bar(stat="identity", position = position_dodge(), fill = "khaki4")+
+  geom_text(aes(label= round(x,digits = 2)), vjust=-0.2, position = position_dodge(0.9), color = "black", size=3) +
+  labs(title = 'Proportion of women to ever lost a child, by Country', x = 'Country', y = 'Proportion')
+
+
+prop.insurance<- aggregate(ready.outcome2.data$v481, list(ready.outcome2.data$v000), FUN=mean)
+q1<- ggplot(prop.insurance, aes(x=reorder(Group.1, -x), y=round(x,digits = 2))) + 
+  geom_bar(stat="identity", position = position_dodge(), fill = "indianred4")+
+  geom_text(aes(label= round(x,digits = 2)), vjust=-0.2, position = position_dodge(0.9), color = "black", size=3) +
+  labs(title = 'Proportion of women with health insurance coverage, by Country', x = 'Country', y = 'Proportion')
+
+
+prop.child_status<- aggregate(ready.outcome3.data$b5, list(ready.outcome3.data$v000), FUN=mean)
+r1<- ggplot(prop.child_status, aes(x=reorder(Group.1, x), y=round(1-x,digits = 2))) + 
+  geom_bar(stat="identity", position = position_dodge(), fill = "plum4")+
+  geom_text(aes(label= round(1-x,digits = 2)), vjust=-0.2, position = position_dodge(0.9), color = "black", size=3) +
+  labs(title = 'Proportion of women with child death from last 5-years birth record, by Country', x = 'Country', y = 'Proportion')
+
+p1; q1; r1
+
+```
+
+
+
+
+```{r}
+prop.child_loss<- aggregate(cleaned.outcome1.data$child_loss, list(cleaned.outcome1.data$v025), FUN=mean)
+p2<- ggplot(prop.child_loss, aes(x=reorder(Group.1, -x), y=round(x,digits = 2))) + 
+  geom_bar(stat="identity", position = position_dodge(), fill = "khaki4")+
+  geom_text(aes(label= round(x,digits = 2)), vjust=-0.2, position = position_dodge(0.9), color = "black", size=3) +
+  labs(title = 'Proportion of women to ever lost a child, by Region', x = 'Region', y = 'Proportion')
+
+
+prop.insurance<- aggregate(ready.outcome2.data$v481, list(cleaned.outcome2.data$v025), FUN=mean)
+q2<- ggplot(prop.insurance, aes(x=reorder(Group.1, -x), y=round(x,digits = 2))) + 
+  geom_bar(stat="identity", position = position_dodge(), fill = "indianred4")+
+  geom_text(aes(label= round(x,digits = 2)), vjust=-0.2, position = position_dodge(0.9), color = "black", size=3) +
+  labs(title = 'Proportion of women with health insurance coverage, by Region', x = 'Region', y = 'Proportion')
+
+
+prop.child_status<- aggregate(ready.outcome3.data$b5, list(cleaned.outcome3.data$v025), FUN=mean)
+r2<- ggplot(prop.child_status, aes(x=reorder(Group.1, x), y=round(1-x,digits = 2))) + 
+  geom_bar(stat="identity", position = position_dodge(), fill = "plum4")+
+  geom_text(aes(label= round(1-x,digits = 2)), vjust=-0.2, position = position_dodge(0.9), color = "black", size=3) +
+  labs(title = 'Proportion of women with child death from last 5-years birth record, by Region', x = 'Region', y = 'Proportion')
+
+p2; q2; r2
+```
+
+
+
+```{r}
+prop.child_loss<- aggregate(cleaned.outcome1.data$child_loss, list(cleaned.outcome1.data$v106), FUN=mean)
+p3<- ggplot(prop.child_loss, aes(x=reorder(Group.1, -x), y=round(x,digits = 2))) + 
+  geom_bar(stat="identity", position = position_dodge(), fill = "khaki4")+
+  geom_text(aes(label= round(x,digits = 2)), vjust=-0.2, position = position_dodge(0.9), color = "black", size=3) +
+  labs(title = 'Proportion of women to ever lost a child, by Level of Education', x = 'Level of Education', y = 'Proportion')
+
+prop.insurance<- aggregate(ready.outcome2.data$v481, list(cleaned.outcome2.data$v106), FUN=mean)
+q3<- ggplot(prop.insurance, aes(x=reorder(Group.1, -x), y=round(x,digits = 2))) + 
+  geom_bar(stat="identity", position = position_dodge(), fill = "indianred4")+
+  geom_text(aes(label= round(x,digits = 2)), vjust=-0.2, position = position_dodge(0.9), color = "black", size=3) +
+  labs(title = 'Proportion with health insurance coverage, by Level of Education', x = 'Level of Education', y = 'Proportion')
+
+
+prop.child_status<- aggregate(ready.outcome3.data$b5, list(cleaned.outcome3.data$v106), FUN=mean)
+r3<- ggplot(prop.child_status, aes(x=reorder(Group.1, x), y=round(1-x,digits = 2))) + 
+  geom_bar(stat="identity", position = position_dodge(), fill = "plum4")+
+  geom_text(aes(label= round(1-x,digits = 2)), vjust=-0.2, position = position_dodge(0.9), color = "black", size=3) +
+  labs(title = 'Proportion with child death from last 5-years birth record, by Level of Education', x = 'Level of Education', y = 'Proportion')
+
+p3; q3; r3
+```
+```{r}
+prop.child_loss<- aggregate(cleaned.outcome1.data$child_loss, list(cleaned.outcome1.data$v190), FUN=mean)
+p4<- ggplot(prop.child_loss, aes(x=reorder(Group.1, -x), y=round(x,digits = 2))) + 
+  geom_bar(stat="identity", position = position_dodge(), fill = "khaki4")+
+  geom_text(aes(label= round(x,digits = 2)), vjust=-0.2, position = position_dodge(0.9), color = "black", size=3) +
+  labs(title = 'Proportion of women to ever lost a child, by Wealth Class', x = 'Wealth Class', y = 'Proportion')
+
+
+prop.insurance<- aggregate(ready.outcome2.data$v481, list(cleaned.outcome2.data$v190), FUN=mean)
+q4<- ggplot(prop.insurance, aes(x=reorder(Group.1, -x), y=round(x,digits = 2))) + 
+  geom_bar(stat="identity", position = position_dodge(), fill = "indianred4")+
+  geom_text(aes(label= round(x,digits = 2)), vjust=-0.2, position = position_dodge(0.9), color = "black", size=3) +
+  labs(title = 'Proportion with health insurance coverage, by Wealth Class', x = 'Wealth Class', y = 'Proportion')
+
+
+prop.child_status<- aggregate(ready.outcome3.data$b5, list(cleaned.outcome3.data$v190), FUN=mean)
+r4<- ggplot(prop.child_status, aes(x=reorder(Group.1, x), y=round(1-x,digits = 2))) + 
+  geom_bar(stat="identity", position = position_dodge(), fill = "plum4")+
+  geom_text(aes(label= round(1-x,digits = 2)), vjust=-0.2, position = position_dodge(0.9), color = "black", size=3) +
+  labs(title = 'Proportion with child death from last 5-years birth record, by Wealth Class', x = 'Wealth Class', y = 'Proportion')
+
+p4; q4; r4
+
+```
+
+```{r}
+prop.child_loss<- aggregate(cleaned.outcome1.data$child_loss, list(cleaned.outcome1.data$v501b), FUN=mean)
+p5<- ggplot(prop.child_loss, aes(x=reorder(Group.1, -x), y=round(x,digits = 2))) + 
+  geom_bar(stat="identity", position = position_dodge(), fill = "khaki4")+
+  geom_text(aes(label= round(x,digits = 2)), vjust=-0.2, position = position_dodge(0.9), color = "black", size=3) +
+  labs(title = 'Proportion of women to ever lost a child, by Marital Status', x = 'Marital Status', y = 'Proportion')
+
+
+prop.insurance<- aggregate(ready.outcome2.data$v481, list(cleaned.outcome2.data$v501b), FUN=mean)
+q5<- ggplot(prop.insurance, aes(x=reorder(Group.1, -x), y=round(x,digits = 2))) + 
+  geom_bar(stat="identity", position = position_dodge(), fill = "indianred4")+
+  geom_text(aes(label= round(x,digits = 2)), vjust=-0.2, position = position_dodge(0.9), color = "black", size=3) +
+  labs(title = 'Proportion with health insurance coverage, by Marital Status', x = 'Marital Status', y = 'Proportion')
+
+
+prop.child_status<- aggregate(ready.outcome3.data$b5, list(cleaned.outcome3.data$v501b), FUN=mean)
+r5<- ggplot(prop.child_status, aes(x=reorder(Group.1, x), y=round(1-x,digits = 2))) + 
+  geom_bar(stat="identity", position = position_dodge(), fill = "plum4")+
+  geom_text(aes(label= round(1-x,digits = 2)), vjust=-0.2, position = position_dodge(0.9), color = "black", size=3) +
+  labs(title = 'Proportion with child death from last 5-years birth record, by Marital Status', x = 'Marital Status', y = 'Proportion')
+
+p5; q5; r5
+
+```
+
+```{r}
+prop.child_loss<- aggregate(cleaned.outcome1.data$child_loss, list(cleaned.outcome1.data$v228), FUN=mean)
+p6<- ggplot(prop.child_loss, aes(x=reorder(Group.1, -x), y=round(x,digits = 2))) + 
+  geom_bar(stat="identity", position = position_dodge(), fill = "khaki4")+
+  geom_text(aes(label= round(x,digits = 2)), vjust=-0.2, position = position_dodge(0.9), color = "black", size=3) +
+  labs(title = 'Proportion of women to ever lost a child, by Pregnancy Termination Status', x = 'Ever terminated pregnancy', y = 'Proportion')
+
+
+prop.insurance<- aggregate(ready.outcome2.data$v481, list(cleaned.outcome2.data$v228), FUN=mean)
+q6<- ggplot(prop.insurance, aes(x=reorder(Group.1, -x), y=round(x,digits = 2))) + 
+  geom_bar(stat="identity", position = position_dodge(), fill = "indianred4")+
+  geom_text(aes(label= round(x,digits = 2)), vjust=-0.2, position = position_dodge(0.9), color = "black", size=3) +
+  labs(title = 'Proportion with health insurance coverage, by Pregnancy Termination Status', x = 'Pregnancy Termination Status', y = 'Proportion')
+
+
+prop.child_status<- aggregate(ready.outcome3.data$b5, list(cleaned.outcome3.data$v228), FUN=mean)
+r6<- ggplot(prop.child_status, aes(x=reorder(Group.1, x), y=round(1-x,digits = 2))) + 
+  geom_bar(stat="identity", position = position_dodge(), fill = "plum4")+
+  geom_text(aes(label= round(1-x,digits = 2)), vjust=-0.2, position = position_dodge(0.9), color = "black", size=3) +
+  labs(title = 'Proportion with child death from last 5-years birth record, by Pregnancy Termination Status', x = 'Pregnancy Termination Status', y = 'Proportion')
+
+p6; q6; r6
+```
+
+
+```{r}
+prop.child_loss<- aggregate(cleaned.outcome1.data$child_loss, list(cleaned.outcome1.data$smoke), FUN=mean)
+
+ggplot(prop.child_loss, aes(x=reorder(Group.1, -x), y=round(x,digits = 2))) + 
+  geom_bar(stat="identity", position = position_dodge())+
+  geom_text(aes(label= round(x,digits = 2)), vjust=-0.2, position = position_dodge(0.9), color = "black", size=3) +
+  labs(title = 'Proportion of lost children by Smoking status', x = 'Smokes', y = 'Proportion of lost children')
+```
+
+
+```{r}
+p<- ggarrange(
+  p1, p2, p3, p4, p5, p6,
+  ncol=2, nrow=3,
+  font.label = list(size=5))
+
+q<- ggarrange(
+  q1, q2, q3, q4, q5, q6,
+  ncol=2, nrow=3,
+  font.label = list(size=5))
+
+r<- ggarrange(
+  r1, r2, r3, r4, r5, r6,
+  ncol=2, nrow=3,
+  font.label = list(size=5))
+
+p; q; r
+```
+
+
+
+```{r}
+ready.outcome1.data<- dummy_cols(cleaned.outcome1.data, select_columns = c('v000', 'v501b'))
+ready.outcome1.data$v013 <- case_when((ready.outcome1.data$v013 == "15-19") ~ 1,
+           (ready.outcome1.data$v013 == "20-24") ~ 2,
+           (ready.outcome1.data$v013 == "25-29") ~ 3,
+           (ready.outcome1.data$v013 == "30-34") ~ 4,
+           (ready.outcome1.data$v013 == "35-39") ~ 5,
+           (ready.outcome1.data$v013 == "40-44") ~ 6,
+           (ready.outcome1.data$v013 == "45-49") ~ 7)
+
+ready.outcome1.data$v025<- case_when((ready.outcome1.data$v025 == "rural") ~ 0,
+           (ready.outcome1.data$v025 == "urban") ~ 1)
+
+ready.outcome1.data$v106<- case_when((ready.outcome1.data$v106 == "no education") ~ 1,
+           (ready.outcome1.data$v106 == "primary") ~ 2,
+           (ready.outcome1.data$v106 == "secondary") ~ 3,
+           (ready.outcome1.data$v106 == "higher") ~ 4)
+
+ready.outcome1.data$v190<- case_when((ready.outcome1.data$v190 == "poorest") ~ 1,
+           (ready.outcome1.data$v190 == "poorer") ~ 2,
+           (ready.outcome1.data$v190 == "middle") ~ 3,
+           (ready.outcome1.data$v190 == "richer") ~ 4,
+           (ready.outcome1.data$v190 == "richest") ~ 5)
+
+ready.outcome1.data$first.sex<- case_when((ready.outcome1.data$first.sex == "<18 years") ~ 1,
+           (ready.outcome1.data$first.sex == "18-24 years") ~ 2,
+           (ready.outcome1.data$first.sex == "25-29 years") ~ 3,
+           (ready.outcome1.data$first.sex == "30+ years") ~ 4)
+
+ready.outcome1.data$v228<- case_when((ready.outcome1.data$v228 == "no") ~ 0,
+           (ready.outcome1.data$v228 == "yes") ~ 1)
+
+ready.outcome1.data$smoke<- case_when((ready.outcome1.data$smoke == "b: No") ~ 0,
+           (ready.outcome1.data$smoke == "a: Yes") ~ 1)
+
+write.csv(ready.outcome1.data,"C:\\UNO Class Doc\\Advanced Stat Machine Learning\\ready.outcome1.csv", row.names = FALSE)
+
+```
+
+
+```{r}
+ready.outcome2.data<- dummy_cols(cleaned.outcome2.data, select_columns = c('v000', 'v501b'))
+
+ready.outcome2.data$v013 <- case_when((ready.outcome2.data$v013 == "15-19") ~ 1,
+           (ready.outcome2.data$v013 == "20-24") ~ 2,
+           (ready.outcome2.data$v013 == "25-29") ~ 3,
+           (ready.outcome2.data$v013 == "30-34") ~ 4,
+           (ready.outcome2.data$v013 == "35-39") ~ 5,
+           (ready.outcome2.data$v013 == "40-44") ~ 6,
+           (ready.outcome2.data$v013 == "45-49") ~ 7)
+
+ready.outcome2.data$v025<- case_when((ready.outcome2.data$v025 == "rural") ~ 0,
+           (ready.outcome2.data$v025 == "urban") ~ 1)
+
+ready.outcome2.data$v106<- case_when((ready.outcome2.data$v106 == "no education") ~ 1,
+           (ready.outcome2.data$v106 == "primary") ~ 2,
+           (ready.outcome2.data$v106 == "secondary") ~ 3,
+           (ready.outcome2.data$v106 == "higher") ~ 4)
+
+ready.outcome2.data$v190<- case_when((ready.outcome2.data$v190 == "poorest") ~ 1,
+           (ready.outcome2.data$v190 == "poorer") ~ 2,
+           (ready.outcome2.data$v190 == "middle") ~ 3,
+           (ready.outcome2.data$v190 == "richer") ~ 4,
+           (ready.outcome2.data$v190 == "richest") ~ 5)
+
+ready.outcome2.data$v228<- case_when((ready.outcome2.data$v228 == "no") ~ 0,
+           (ready.outcome2.data$v228 == "yes") ~ 1)
+
+ready.outcome2.data$v213<- case_when((ready.outcome2.data$v213 == "no or unsure") ~ 0,
+           (ready.outcome2.data$v213 == "yes") ~ 1)
+
+ready.outcome2.data$m14<- case_when((ready.outcome2.data$m14 == "a: No ANC visit") ~ 1,
+           (ready.outcome2.data$m14 == "b: Insufficient ANC visit") ~ 2,
+           (ready.outcome2.data$m14 == "c: Sufficient ANC visit") ~ 3)
+
+ready.outcome2.data$ANC.facility<- case_when((ready.outcome2.data$ANC.facility == "b: No") ~ 0,
+           (ready.outcome2.data$ANC.facility == "a: Yes") ~ 1)
+
+ready.outcome2.data$v312<- case_when((ready.outcome2.data$v312 == "None") ~ 1,
+           (ready.outcome2.data$v312 == "Non-modern") ~ 2,
+           (ready.outcome2.data$v312 == "Modern") ~ 3)
+
+ready.outcome2.data$m15<- case_when((ready.outcome2.data$m15 == "Out-of-facility") ~ 0,
+           (ready.outcome2.data$m15 == "Health facility") ~ 1)
+
+ready.outcome2.data$v401<- case_when((ready.outcome2.data$v401 == "no") ~ 0,
+           (ready.outcome2.data$v401 == "yes") ~ 1)
+
+ready.outcome2.data$v481<- case_when((ready.outcome2.data$v481 == "no") ~ 0,
+           (ready.outcome2.data$v481 == "yes") ~ 1)
+
+write.csv(ready.outcome2.data,"C:\\UNO Class Doc\\Advanced Stat Machine Learning\\ready.outcome2.csv", row.names = FALSE)
+
+```
+
+
+```{r}
+
+ready.outcome3.data<- dummy_cols(cleaned.outcome3.data, select_columns = c('v000', 'v501b'))
+
+ready.outcome3.data$v013<- case_when((ready.outcome3.data$v013 == "15-19") ~ 1,
+           (ready.outcome3.data$v013 == "20-24") ~ 2,
+           (ready.outcome3.data$v013 == "25-29") ~ 3,
+           (ready.outcome3.data$v013 == "30-34") ~ 4,
+           (ready.outcome3.data$v013 == "35-39") ~ 5,
+           (ready.outcome3.data$v013 == "40-44") ~ 6,
+           (ready.outcome3.data$v013 == "45-49") ~ 7)
+
+ready.outcome3.data$v025<- case_when((ready.outcome3.data$v025 == "rural") ~ 0,
+           (ready.outcome3.data$v025 == "urban") ~ 1)
+
+ready.outcome3.data$v106<- case_when((ready.outcome3.data$v106 == "no education") ~ 1,
+           (ready.outcome3.data$v106 == "primary") ~ 2,
+           (ready.outcome3.data$v106 == "secondary") ~ 3,
+           (ready.outcome3.data$v106 == "higher") ~ 4)
+
+ready.outcome3.data$v190<- case_when((ready.outcome3.data$v190 == "poorest") ~ 1,
+           (ready.outcome3.data$v190 == "poorer") ~ 2,
+           (ready.outcome3.data$v190 == "middle") ~ 3,
+           (ready.outcome3.data$v190 == "richer") ~ 4,
+           (ready.outcome3.data$v190 == "richest") ~ 5)
+
+ready.outcome3.data$v228<- case_when((ready.outcome3.data$v228 == "no") ~ 0,
+           (ready.outcome3.data$v228 == "yes") ~ 1)
+
+ready.outcome3.data$ANC.facility<-case_when((ready.outcome3.data$ANC.facility == "b: No") ~ 0,
+           (ready.outcome3.data$ANC.facility == "a: Yes") ~ 1)
+
+ready.outcome3.data$m15<- case_when((ready.outcome3.data$m15 == "Out-of-facility") ~ 0,
+           (ready.outcome3.data$m15 == "Health facility") ~ 1)
+
+ready.outcome3.data$v401<- case_when((ready.outcome3.data$v401 == "no") ~ 0,
+           (ready.outcome3.data$v401 == "yes") ~ 1)
+
+ready.outcome3.data$b0<- case_when((ready.outcome3.data$b0 == "Single") ~ 0,
+           (ready.outcome3.data$b0 == "Multiple") ~ 1)
+
+ready.outcome3.data$b5<- case_when((ready.outcome3.data$b5 == "no") ~ 0,
+           (ready.outcome3.data$b5 == "yes") ~ 1)
+
+ready.outcome3.data$b4<- case_when((ready.outcome3.data$b4 == "female") ~ 0,
+           (ready.outcome3.data$b4 == "male") ~ 1)
+
+ready.outcome3.data$b20<- case_when((ready.outcome3.data$b20 == "a: Preterm") ~ 1,
+           (ready.outcome3.data$b20 == "b: Term") ~ 2,
+           (ready.outcome3.data$b20 == "c: Post-term") ~ 3)
+
+ready.outcome3.data$child.status<- case_when((ready.outcome3.data$child.status == "Alive: <=1 yr old") ~ 1,
+           (ready.outcome3.data$child.status == "Alive: >1 yr old") ~ 2,
+           (ready.outcome3.data$child.status == "Dead: After 1st year") ~ 3,
+           (ready.outcome3.data$child.status == "Dead: Within 1st year") ~ 4)
+
+write.csv(ready.outcome3.data,"C:\\UNO Class Doc\\Advanced Stat Machine Learning\\ready.outcome3.csv", row.names = FALSE)
+
+```
+
+
+
+```{r}
+library(caTools)
+library(ROCR)
+
+split<- sample.split(ready.outcome1.data, SplitRatio = 0.8)
+
+outcome1.train<- subset(ready.outcome1.data, split== "TRUE")
+outcome1.test<- subset(ready.outcome1.data, split== "FALSE")
+
+logistic_model1<- glm(child_loss ~ as.factor(v013) + as.factor(v025) +
+                        as.factor(v106) + as.factor(v190) + as.factor(first.sex) +
+                        as.factor(v228) + as.factor(smoke) +
+                        as.factor(`v501b_Formerly married`) +
+                        as.factor(`v501b_Never married`) +
+                        as.factor(v000_AO7) + as.factor(v000_EG6) +
+                        as.factor(v000_ET7) + as.factor(v000_GA6) +
+                        as.factor(v000_GH6) + as.factor(v000_KE6) +
+                        as.factor(v000_ML7) + as.factor(v000_ZA7) +
+                        as.factor(v000_ZM7) + as.factor(v000_ZW7),
+                      data = outcome1.train,
+                      family = "binomial")
+summary(logistic_model1)
+logistic_model1
+
+predict_model1<- predict(logistic_model1, outcome1.test, type="response")
+predict_model1<- ifelse(predict_model1 > 0.5, 1, 0)
+
+table(outcome1.test$child_loss, predict_model1)
+
+wrong_class<- mean(predict_model1 != outcome1.test$child_loss)
+print(paste('Accuracy =', 1 - wrong_class))
+
+correct_class<- mean(predict_model1 == outcome1.test$child_loss)
+print(paste('Accuracy =', correct_class))
+
+ROCPred<- prediction(predict_model1, outcome1.test$child_loss)
+ROCPerf<- performance(ROCPred, measure = "tpr", x.measure = "fpr")
+AUC<- performance(ROCPred, measure = "auc")
+AUC<- AUC@y.values[[1]]
+AUC
+
+plot(ROCPerf)
+plot(ROCPerf, colorize = TRUE,
+     print.cutoffs.at = seq(0.1, by = 0.1),
+     main = "ROC Curve")
+abline(a=0, b=1)
+
+AUC<- round(AUC, 4)
+legend(0.6,0.4, AUC, title = "AUC", cex=1)
+
+exp(cbind (OR = coef(logistic_model1), confint(logistic_model1)))
+
+
+```
+
+
+```{r}
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(ggmosaic)
+library(fastDummies)
+library(ggpubr)
+```
+
+```{r}
+data.countries <- read.csv("C:\\Glean Files\\Jomiloju\\Machine Learning Project Data\\Dataset (All Countries).csv")
+lapply(data.countries,unique)
+variable.names(data.countries)
+```
+
+```{r}
+data.countries$v013<- as.factor(data.countries$v013)
+
+data.countries$v013<- type.convert(data.countries$v013, as.is = FALSE)
+data.countries$v190<- type.convert(data.countries$v190, as.is = TRUE)
+data.countries$v228<- gsub("9", "", as.character(data.countries$v228))
+data.countries$v401<- gsub("9", "", as.character(data.countries$v401))
+data.countries$v463a<- gsub("9", "", as.character(data.countries$v463a))
+data.countries$v463b<- gsub("9", "", as.character(data.countries$v463b))
+data.countries$v463b<- gsub("9", "", as.character(data.countries$v463b))
+data.countries$v463x<- gsub("9", "", as.character(data.countries$v463x))
+data.countries$v481<- gsub("9", "", as.character(data.countries$v481))
+
+data.countries$v525<- gsub("99", "", as.character(data.countries$v525))
+data.countries$v525<- gsub("inconsistent", "", as.character(data.countries$v525))
+data.countries$v525<- gsub("don't know", "", as.character(data.countries$v525))
+
+data.countries$v531<- gsub("99", "", as.character(data.countries$v531))
+data.countries$v531<- gsub("inconsistent", "", as.character(data.countries$v531))
+data.countries$v531<- gsub("don't know", "", as.character(data.countries$v531))
+data.countries$v531<- type.convert(data.countries$v531, as.is = TRUE)
+
+data.countries$v701<- gsub("don't know", "", as.character(data.countries$v701))
+data.countries$v701<- gsub("9", "", as.character(data.countries$v701))
+
+data.countries$m13<- gsub("don't know", "", as.character(data.countries$m13))
+data.countries$m13<- gsub("99", "", as.character(data.countries$m13))
+data.countries$m13<- type.convert(data.countries$m13, as.is = TRUE)
+
+data.countries$m14<- gsub("don't know", "", as.character(data.countries$m14))
+data.countries$m14<- gsub("99", "", as.character(data.countries$m14))
+data.countries$m14<- gsub("no antenatal visits", "0", as.character(data.countries$m14))
+data.countries$m14<- type.convert(data.countries$m14, as.is = TRUE)
+
+data.countries$m15<- gsub("99", "", as.character(data.countries$m15))
+
+data.countries$b6<- gsub("999", "", as.character(data.countries$b6))
+data.countries$b6<- gsub("died on day of birth", "100", as.character(data.countries$b6))
+data.countries$b6<- gsub("days: 1", "101", as.character(data.countries$b6))
+data.countries$b6<- gsub("months: 1", "201", as.character(data.countries$b6))
+data.countries$b6<- gsub("years: 1", "301", as.character(data.countries$b6))
+
+data.countries$m17<- gsub("9", "", as.character(data.countries$m17))
+
+data.countries$m18<- gsub("9", "", as.character(data.countries$m18))
+data.countries$m18<- gsub("don't know", "", as.character(data.countries$m18))
+
+data.countries$m57e<- gsub("9", "", as.character(data.countries$m57e))
+data.countries$m57f<- gsub("9", "", as.character(data.countries$m57f))
+data.countries$m57g<- gsub("9", "", as.character(data.countries$m57g))
+data.countries$m57h<- gsub("9", "", as.character(data.countries$m57h))
+data.countries$m57m<- gsub("9", "", as.character(data.countries$m57m))
+data.countries$m57n<- gsub("9", "", as.character(data.countries$m57n))
+
+
+data.countries<- data.countries %>%
+  mutate(v312=recode(v312, "not using" = "None","lactational amenorrhea (lam)" = "Modern", "male condom" = "Modern", 
+                                                     "periodic abstinence" = "Non-modern", "pill" = "Modern", "implants/norplant" = "Modern", "injections" = "Modern",
+                                                     "withdrawal" = "Non-modern", "female sterilization" = "Modern", "iud" = "Modern", "other traditional" = "Non-modern",
+                                                     "female condom" = "Modern", "emergency contraception" = "Modern", "other modern method" = "Modern", "standard days method (sdm)" = "Modern",
+                                                     "diaphragm" = "Modern", "male sterilization" = "Modern", "specific method 2" = "Non-modern", "specific method 1" = "Non-modern"),
+                          v501a=recode(v501,"married" = "Married", "living with partner" = "Unmarried", "no longer living together/separated" = "Unmarried", 
+                                       "never in union" = "Unmarried", "widowed" = "Unmarried", "divorced" = "Unmarried"),
+                          v501b=recode(v501,"married" = "Married", "living with partner" = "Never married", "no longer living together/separated" = "Formerly married", "never in union" = "Never married", "widowed" = "Formerly married", "divorced" = "Formerly married"),
+                          b0=recode(b0, "single birth" = "Single", "2nd of multiple" = "Multiple", "1st of multiple" = "Multiple", "3rd of multiple" = "Multiple"),
+                          m15=recode(m15,"24" = "Health facility", "25" = "Health facility", "27" = "Health facility", "32" = "Health facility", "33" = "Health facility",
+                                                    "34" = "Health facility", "government hospital" = "Health facility", "private hospital/clinic" = "Health facility", 
+                                                    "government health center" = "Health facility", "government health post" = "Health facility", "other private sector" = "Health facility",
+                                                    "other public sector" = "Health facility", "respondent's home" = "Out-of-facility", "other home" = "Out-of-facility", "other" = "Out-of-facility",
+                                                    "41" = "Out-of-facility", "42" = "Out-of-facility", "43" = "Out-of-facility", "44" = "Out-of-facility", "46" = "Out-of-facility"))
+
+
+
+data.countries$b7<- case_when((data.countries$b7== 0) ~ "a: <1 month",
+          (data.countries$b7>= 1) & (data.countries$b7 <= 6) ~ "b: 1-6 months",
+          (data.countries$b7>=7) & (data.countries$b7<=12) ~ "c: 7-12 months",
+          (data.countries$b7>=13) ~ "d: After 1-year"
+          )
+
+data.countries$b20<- case_when((data.countries$b20>=4) & (data.countries$b20<=8) ~ "a: Preterm",
+          (data.countries$b20 == 9) ~ "b: Term",
+          (data.countries$b20 == 10) ~ "c: Post-term"
+          )
+
+data.countries$b11<- case_when((data.countries$b11>=6) & (data.countries$b11<12) ~ "a: <12 months",
+          (data.countries$b11>=12) & (data.countries$b11<=23) ~ "b: 12-23 months",
+          (data.countries$b11>=24) & (data.countries$b11<=60) ~ "c: 2-5 years",
+          (data.countries$b11>60) ~ "d: >5 years"
+          )
+
+data.countries$m13<- case_when ((data.countries$m13>=0) & (data.countries$m13<4) ~ "a: First trimester",
+           (data.countries$m13>=4) & (data.countries$m13<7) ~ "b: Second trimester",
+           (data.countries$m13>=7) & (data.countries$m13<=10) ~ "c: Third trimester"
+           )
+
+data.countries$m14<- case_when ((data.countries$m14 == 0) ~ "a: No ANC visit",
+           (data.countries$m14>=1) & (data.countries$m14 <8) ~ "b: Insufficient ANC visit",
+           (data.countries$m14>=8) & (data.countries$m14<=90) ~ "c: Sufficient ANC visit"
+           )
+
+data.countries<- data.countries %>%
+  mutate(ANC = case_when((data.countries$m14 == "a: No ANC visit") ~ "0",
+                                (data.countries$m14 == "b: Insufficient ANC visit") & (data.countries$m13 == "a: First trimester") ~ "1",
+                                (data.countries$m14 == "b: Insufficient ANC visit") & (data.countries$m13 == "b: Second trimester") ~ "2",
+                                (data.countries$m14 == "b: Insufficient ANC visit") & (data.countries$m13 == "c: Third trimester") ~ "3",
+                                (data.countries$m14 == "c: Sufficient ANC visit") & (data.countries$m13 == "a: First trimester") ~ "4",
+                                (data.countries$m14 == "c: Sufficient ANC visit") & (data.countries$m13 == "b: Second trimester") ~ "5",
+                                (data.countries$m14 == "c: Sufficient ANC visit") & (data.countries$m13 == "c: Third trimester") ~ "6")
+         )
+
+data.countries<- data.countries %>%
+  mutate(ever.child = case_when((data.countries$v218 < 2) ~ "0-1 child",
+                                (data.countries$v218>=2) & (data.countries$v218<4) ~ "2-3 chidlren",
+                                (data.countries$v218>=4) ~ "4+ children"),
+         first.sex = case_when((data.countries$v531 < 18) ~ "<18 years",
+                              (data.countries$v531<=18) & (data.countries$v531<25) ~ "18-24 years",
+                              (data.countries$v531<=25) & (data.countries$v531<30) ~ "25-29 years",
+                              (data.countries$v531>=30) ~ "30+ years"),
+         child.status = case_when((data.countries$b5=="yes") & (data.countries$b8<=1) ~ "Alive: <=1 yr old",
+                                  (data.countries$b5=="yes") & (data.countries$b8>1) ~ "Alive: >1 yr old",
+                                  (data.countries$b5=="no") & (data.countries$b7=="a: <1 month" | data.countries$b7=="b: 1-6 months" | 
+                                                                 data.countries$b7=="c: 7-12 months") ~ "Dead: Within 1st year",
+                                  (data.countries$b5=="no") & (data.countries$b7=="d: After 1-year") ~ "Dead: After 1st year")
+         )
+
+
+data.countries<- data.countries %>%
+  mutate(smoke= case_when ((data.countries$v463a == "yes") | (data.countries$v463b == "yes") | (data.countries$v463e == "yes") |
+                           (data.countries$v463f == "yes") | (data.countries$v463g == "yes") | (data.countries$v463j == "yes") | 
+                           (data.countries$v463k == "yes") | (data.countries$v463l == "yes") | (data.countries$v463x == "yes") ~ "a: Yes",
+                           (data.countries$v463a == "no" | data.countries$v463a == "") &
+                           (data.countries$v463b == "no" | data.countries$v463b == "") &
+                           (data.countries$v463e == "no" | data.countries$v463e == "") &
+                           (data.countries$v463f == "no" | data.countries$v463f == "") & 
+                           (data.countries$v463g == "no" | data.countries$v463g == "") & 
+                           (data.countries$v463j == "no" | data.countries$v463j == "") & 
+                           (data.countries$v463k == "no" | data.countries$v463k == "") & 
+                           (data.countries$v463l == "no" | data.countries$v463l == "") & 
+                           (data.countries$v463x == "no" | data.countries$v463x == "") ~ "b: No"))
+
+data.countries<- data.countries %>%
+  mutate(ANC.facility= case_when((data.countries$m57e == "yes") | (data.countries$m57f == "yes") | (data.countries$m57g == "yes") |
+                             (data.countries$m57h == "yes") | (data.countries$m57m == "yes") | (data.countries$m57n == "yes")~ "a: Yes",
+                             (data.countries$m57e == "no" | data.countries$m57e == "") &
+                             (data.countries$m57f == "no" | data.countries$m57f == "") &
+                             (data.countries$m57g == "no" | data.countries$m57g == "") &
+                             (data.countries$m57h == "no" | data.countries$m57h == "") &
+                             (data.countries$m57m == "no" | data.countries$m57m == "") & 
+                             (data.countries$m57n == "no" | data.countries$m57n == "") ~ "b: No"))
+
+data.countries<- data.countries %>%
+  mutate(n_lostchild = v201 - v218)
+
+data.countries<- data.countries %>%
+  mutate(child_loss= case_when((data.countries$n_lostchild == 0) ~ 0,
+                             (data.countries$n_lostchild > 0) ~ 1))
+
+data.countries<- data.countries %>%
+  mutate(lost_child= case_when((data.countries$n_lostchild == 0) ~ 0,
+                             (data.countries$n_lostchild == 1) ~ 1,
+         (data.countries$n_lostchild > 1) ~ 2))
+
+
+data.countries$v228<- case_when((data.countries$v228 == "yes") ~ "yes", 
+                                 (data.countries$v228 == "no") ~ "no")
+
+data.countries$v401<- case_when((data.countries$v401 == "yes") ~ "yes", 
+                                (data.countries$v401 == "no") ~ "no")
+
+data.countries$v481<- case_when((data.countries$v481 == "yes") ~ "yes", 
+                                (data.countries$v481 == "no") ~ "no")
+
+data.countries$v701<- case_when((data.countries$v701 == "higher") ~ "higher", 
+                                (data.countries$v701 == "no education") ~ "no education",
+                                (data.countries$v701 == "primary") ~ "primary", 
+                                (data.countries$v701 == "secondary") ~ "secondary")
+
+data.countries$m15<- case_when((data.countries$m15 == "Health facility") ~ "Health facility", 
+                               (data.countries$m15 == "Out-of-facility") ~ "Out-of-facility")
+
+
+data.countries$m17<- case_when((data.countries$m17 == "yes") ~ "yes", 
+                               (data.countries$m17 == "no") ~ "no")
+
+data.countries$m18<- case_when((data.countries$m18 == "average") ~ "average", 
+                               (data.countries$m18 == "larger than average") ~ "larger than average",
+                               (data.countries$m18 == "smaller than average") ~ "smaller than average",
+                               (data.countries$m18 == "very large") ~ "very large",
+                               (data.countries$m18 == "very small") ~ "very small")
+
+
+
+data.countries<- subset(data.countries, select = -c(v463a,v463b,v463e,v463f,v463g,v463j,v463k,v463l,v463x,v463z,v525,v190a,v102,hw1,b6, m57e,m57f,m57g,m57h,m57m,m57n))
+
+names(which(colSums(is.na(data.countries))>0))
+
+```
+
+
+```{r}
+#Dataset for Individual Outcome
+outcome1.data<- subset(data.countries, select = c(v000,v007,v012,v013,v025,v106,v190,v501,v501a,v501b,v531,first.sex,v228,smoke,v201,v218, n_lostchild, child_loss,lost_child))
+
+outcome2.data<- subset(data.countries, select = c(v000,v007,v012,v013,v025,v106,v190,v501,v501a,v501b,v213,v228,m14,ANC.facility,v312,m15,v401,v481,child_loss))
+
+outcome3.data<- subset(data.countries, select = c(v000,v007,v013,v025,v106,v190,v501,v501a,v501b,b0,b4,b5,b20,v228,m15,v401,ANC.facility,child.status))
+
+cleaned.outcome1.data<- outcome1.data %>% 
+  drop_na()
+
+cleaned.outcome2.data<- outcome2.data %>% 
+  drop_na()
+
+cleaned.outcome3.data<- outcome3.data %>% 
+  drop_na()
+
+data.nomiss<- subset(data.countries, select = c(names(which(colSums(is.na(data.countries))==0))))
+
+```
+
+
+
+```{r}
+write.csv(data.nomiss,"C:\\UNO Class Doc\\Advanced Stat Machine Learning\\cleaned.csv", row.names = FALSE)
+
+write.csv(data.countries,"C:\\UNO Class Doc\\Advanced Stat Machine Learning\\full_data.csv", row.names = FALSE)
+```
+
+
+```{r}
+write.csv(cleaned.outcome1.data,"C:\\UNO Class Doc\\Advanced Stat Machine Learning\\outcome1.csv", row.names = FALSE)
+write.csv(cleaned.outcome2.data,"C:\\UNO Class Doc\\Advanced Stat Machine Learning\\outcome2.csv", row.names = FALSE)
+write.csv(cleaned.outcome3.data,"C:\\UNO Class Doc\\Advanced Stat Machine Learning\\outcome3.csv", row.names = FALSE)
+
+```
+
+
+```{r}
+ggplot(cleaned.outcome1.data, aes(x=v000, y=lost_child, fill=v025)) +
+    geom_boxplot(notch = FALSE, position = position_dodge(1)) +
+    labs(title = 'Boxplot of Children Ever Born across the African Countries ',
+         x='Country',
+         y='Number of children ever born')
+
+ggplot(cleaned.outcome1.data, aes(x=v000, y=lost_child)) +
+    geom_boxplot(notch = FALSE, position = position_dodge(1)) +
+    labs(title = 'Boxplot of Children Ever Born across the African Countries',
+         x='Country',
+         y='Number of children ever born')
+
+ggplot(cleaned.outcome1.data, aes(x=v025, y=lost_child)) +
+    geom_boxplot(notch = FALSE, position = position_dodge(1)) +
+    labs(title = 'Boxplot of Children Ever Born by region of residence',
+         x='Region of residence',
+         y='Number of children ever born')
+
+ggplot(cleaned.outcome1.data, aes(x=v106, y=lost_child)) +
+    geom_boxplot(notch = FALSE, position = position_dodge(1)) +
+    labs(title = 'Boxplot of Children Ever Born by level of education',
+         x='Level of education',
+         y='Number of children ever born')
+
+ggplot(cleaned.outcome1.data, aes(x=v190, y=lost_child)) +
+    geom_boxplot(notch = FALSE, position = position_dodge(1)) +
+    labs(title = 'Boxplot of Children Ever Born across the Waelth Groups ',
+         x='Wealth Group',
+         y='Number of children ever born')
+
+ggplot(cleaned.outcome1.data, aes(x=v012, y=lost_child)) +
+  geom_point(aes(color = factor(v000)))
+
+
+```
+```{r}
+cleaned.outcome1.data$v000<- case_when((cleaned.outcome1.data$v000 == "AO7") ~ "Angola", 
+                                             (cleaned.outcome1.data$v000 == "EG6") ~ "Egypt",
+                                             (cleaned.outcome1.data$v000 == "ET7") ~ "Ethiopia",
+                                             (cleaned.outcome1.data$v000 == "GA6") ~ "Gabon",
+                                             (cleaned.outcome1.data$v000 == "GH6") ~ "Ghana",
+                                             (cleaned.outcome1.data$v000 == "KE6") ~ "Kenya",
+                                             (cleaned.outcome1.data$v000 == "ML7") ~ "Mali",
+                                             (cleaned.outcome1.data$v000 == "NG7") ~ "Nigeria",
+                                             (cleaned.outcome1.data$v000 == "ZA7") ~ "South Africa",
+                                             (cleaned.outcome1.data$v000 == "ZM7") ~ "Zambia",
+                                             (cleaned.outcome1.data$v000 == "ZW7") ~ "Zimbabwe")
+
+ready.outcome2.data$v000<- case_when((ready.outcome2.data$v000 == "AO7") ~ "Angola", 
+                                             (ready.outcome2.data$v000 == "EG6") ~ "Egypt",
+                                             (ready.outcome2.data$v000 == "ET7") ~ "Ethiopia",
+                                             (ready.outcome2.data$v000 == "GA6") ~ "Gabon",
+                                             (ready.outcome2.data$v000 == "GH6") ~ "Ghana",
+                                             (ready.outcome2.data$v000 == "KE6") ~ "Kenya",
+                                             (ready.outcome2.data$v000 == "ML7") ~ "Mali",
+                                             (ready.outcome2.data$v000 == "NG7") ~ "Nigeria",
+                                             (ready.outcome2.data$v000 == "ZA7") ~ "South Africa",
+                                             (ready.outcome2.data$v000 == "ZM7") ~ "Zambia",
+                                             (ready.outcome2.data$v000 == "ZW7") ~ "Zimbabwe")
+
+ready.outcome3.data$v000<- case_when((ready.outcome3.data$v000 == "AO7") ~ "Angola",
+                                             (ready.outcome3.data$v000 == "EG6") ~ "Egypt",
+                                             (ready.outcome3.data$v000 == "ET7") ~ "Ethiopia",
+                                             (ready.outcome3.data$v000 == "GA6") ~ "Gabon",
+                                             (ready.outcome3.data$v000 == "GH6") ~ "Ghana",
+                                             (ready.outcome3.data$v000 == "KE6") ~ "Kenya",
+                                             (ready.outcome3.data$v000 == "ML7") ~ "Mali",
+                                             (ready.outcome3.data$v000 == "NG7") ~ "Nigeria",
+                                             (ready.outcome3.data$v000 == "ZA7") ~ "South Africa",
+                                             (ready.outcome3.data$v000 == "ZM7") ~ "Zambia",
+                                             (ready.outcome3.data$v000 == "ZW7") ~ "Zimbabwe")
+
+```
+
+
+```{r}
+prop.child_loss<- aggregate(cleaned.outcome1.data$child_loss, list(cleaned.outcome1.data$v000), FUN=mean)
+p1<- ggplot(prop.child_loss, aes(x=reorder(Group.1, -x), y=round(x,digits = 2))) + 
+  geom_bar(stat="identity", position = position_dodge(), fill = "khaki4")+
+  geom_text(aes(label= round(x,digits = 2)), vjust=-0.2, position = position_dodge(0.9), color = "black", size=3) +
+  labs(title = 'Proportion of women to ever lost a child, by Country', x = 'Country', y = 'Proportion')
+
+
+prop.insurance<- aggregate(ready.outcome2.data$v481, list(ready.outcome2.data$v000), FUN=mean)
+q1<- ggplot(prop.insurance, aes(x=reorder(Group.1, -x), y=round(x,digits = 2))) + 
+  geom_bar(stat="identity", position = position_dodge(), fill = "indianred4")+
+  geom_text(aes(label= round(x,digits = 2)), vjust=-0.2, position = position_dodge(0.9), color = "black", size=3) +
+  labs(title = 'Proportion of women with health insurance coverage, by Country', x = 'Country', y = 'Proportion')
+
+
+prop.child_status<- aggregate(ready.outcome3.data$b5, list(ready.outcome3.data$v000), FUN=mean)
+r1<- ggplot(prop.child_status, aes(x=reorder(Group.1, x), y=round(1-x,digits = 2))) + 
+  geom_bar(stat="identity", position = position_dodge(), fill = "plum4")+
+  geom_text(aes(label= round(1-x,digits = 2)), vjust=-0.2, position = position_dodge(0.9), color = "black", size=3) +
+  labs(title = 'Proportion of women with child death from last 5-years birth record, by Country', x = 'Country', y = 'Proportion')
+
+p1; q1; r1
+
+```
+
+
+
+
+```{r}
+prop.child_loss<- aggregate(cleaned.outcome1.data$child_loss, list(cleaned.outcome1.data$v025), FUN=mean)
+p2<- ggplot(prop.child_loss, aes(x=reorder(Group.1, -x), y=round(x,digits = 2))) + 
+  geom_bar(stat="identity", position = position_dodge(), fill = "khaki4")+
+  geom_text(aes(label= round(x,digits = 2)), vjust=-0.2, position = position_dodge(0.9), color = "black", size=3) +
+  labs(title = 'Proportion of women to ever lost a child, by Region', x = 'Region', y = 'Proportion')
+
+
+prop.insurance<- aggregate(ready.outcome2.data$v481, list(cleaned.outcome2.data$v025), FUN=mean)
+q2<- ggplot(prop.insurance, aes(x=reorder(Group.1, -x), y=round(x,digits = 2))) + 
+  geom_bar(stat="identity", position = position_dodge(), fill = "indianred4")+
+  geom_text(aes(label= round(x,digits = 2)), vjust=-0.2, position = position_dodge(0.9), color = "black", size=3) +
+  labs(title = 'Proportion of women with health insurance coverage, by Region', x = 'Region', y = 'Proportion')
+
+
+prop.child_status<- aggregate(ready.outcome3.data$b5, list(cleaned.outcome3.data$v025), FUN=mean)
+r2<- ggplot(prop.child_status, aes(x=reorder(Group.1, x), y=round(1-x,digits = 2))) + 
+  geom_bar(stat="identity", position = position_dodge(), fill = "plum4")+
+  geom_text(aes(label= round(1-x,digits = 2)), vjust=-0.2, position = position_dodge(0.9), color = "black", size=3) +
+  labs(title = 'Proportion of women with child death from last 5-years birth record, by Region', x = 'Region', y = 'Proportion')
+
+p2; q2; r2
+```
+
+
+
+```{r}
+prop.child_loss<- aggregate(cleaned.outcome1.data$child_loss, list(cleaned.outcome1.data$v106), FUN=mean)
+p3<- ggplot(prop.child_loss, aes(x=reorder(Group.1, -x), y=round(x,digits = 2))) + 
+  geom_bar(stat="identity", position = position_dodge(), fill = "khaki4")+
+  geom_text(aes(label= round(x,digits = 2)), vjust=-0.2, position = position_dodge(0.9), color = "black", size=3) +
+  labs(title = 'Proportion of women to ever lost a child, by Level of Education', x = 'Level of Education', y = 'Proportion')
+
+prop.insurance<- aggregate(ready.outcome2.data$v481, list(cleaned.outcome2.data$v106), FUN=mean)
+q3<- ggplot(prop.insurance, aes(x=reorder(Group.1, -x), y=round(x,digits = 2))) + 
+  geom_bar(stat="identity", position = position_dodge(), fill = "indianred4")+
+  geom_text(aes(label= round(x,digits = 2)), vjust=-0.2, position = position_dodge(0.9), color = "black", size=3) +
+  labs(title = 'Proportion with health insurance coverage, by Level of Education', x = 'Level of Education', y = 'Proportion')
+
+
+prop.child_status<- aggregate(ready.outcome3.data$b5, list(cleaned.outcome3.data$v106), FUN=mean)
+r3<- ggplot(prop.child_status, aes(x=reorder(Group.1, x), y=round(1-x,digits = 2))) + 
+  geom_bar(stat="identity", position = position_dodge(), fill = "plum4")+
+  geom_text(aes(label= round(1-x,digits = 2)), vjust=-0.2, position = position_dodge(0.9), color = "black", size=3) +
+  labs(title = 'Proportion with child death from last 5-years birth record, by Level of Education', x = 'Level of Education', y = 'Proportion')
+
+p3; q3; r3
+```
+```{r}
+prop.child_loss<- aggregate(cleaned.outcome1.data$child_loss, list(cleaned.outcome1.data$v190), FUN=mean)
+p4<- ggplot(prop.child_loss, aes(x=reorder(Group.1, -x), y=round(x,digits = 2))) + 
+  geom_bar(stat="identity", position = position_dodge(), fill = "khaki4")+
+  geom_text(aes(label= round(x,digits = 2)), vjust=-0.2, position = position_dodge(0.9), color = "black", size=3) +
+  labs(title = 'Proportion of women to ever lost a child, by Wealth Class', x = 'Wealth Class', y = 'Proportion')
+
+
+prop.insurance<- aggregate(ready.outcome2.data$v481, list(cleaned.outcome2.data$v190), FUN=mean)
+q4<- ggplot(prop.insurance, aes(x=reorder(Group.1, -x), y=round(x,digits = 2))) + 
+  geom_bar(stat="identity", position = position_dodge(), fill = "indianred4")+
+  geom_text(aes(label= round(x,digits = 2)), vjust=-0.2, position = position_dodge(0.9), color = "black", size=3) +
+  labs(title = 'Proportion with health insurance coverage, by Wealth Class', x = 'Wealth Class', y = 'Proportion')
+
+
+prop.child_status<- aggregate(ready.outcome3.data$b5, list(cleaned.outcome3.data$v190), FUN=mean)
+r4<- ggplot(prop.child_status, aes(x=reorder(Group.1, x), y=round(1-x,digits = 2))) + 
+  geom_bar(stat="identity", position = position_dodge(), fill = "plum4")+
+  geom_text(aes(label= round(1-x,digits = 2)), vjust=-0.2, position = position_dodge(0.9), color = "black", size=3) +
+  labs(title = 'Proportion with child death from last 5-years birth record, by Wealth Class', x = 'Wealth Class', y = 'Proportion')
+
+p4; q4; r4
+
+```
+
+```{r}
+prop.child_loss<- aggregate(cleaned.outcome1.data$child_loss, list(cleaned.outcome1.data$v501b), FUN=mean)
+p5<- ggplot(prop.child_loss, aes(x=reorder(Group.1, -x), y=round(x,digits = 2))) + 
+  geom_bar(stat="identity", position = position_dodge(), fill = "khaki4")+
+  geom_text(aes(label= round(x,digits = 2)), vjust=-0.2, position = position_dodge(0.9), color = "black", size=3) +
+  labs(title = 'Proportion of women to ever lost a child, by Marital Status', x = 'Marital Status', y = 'Proportion')
+
+
+prop.insurance<- aggregate(ready.outcome2.data$v481, list(cleaned.outcome2.data$v501b), FUN=mean)
+q5<- ggplot(prop.insurance, aes(x=reorder(Group.1, -x), y=round(x,digits = 2))) + 
+  geom_bar(stat="identity", position = position_dodge(), fill = "indianred4")+
+  geom_text(aes(label= round(x,digits = 2)), vjust=-0.2, position = position_dodge(0.9), color = "black", size=3) +
+  labs(title = 'Proportion with health insurance coverage, by Marital Status', x = 'Marital Status', y = 'Proportion')
+
+
+prop.child_status<- aggregate(ready.outcome3.data$b5, list(cleaned.outcome3.data$v501b), FUN=mean)
+r5<- ggplot(prop.child_status, aes(x=reorder(Group.1, x), y=round(1-x,digits = 2))) + 
+  geom_bar(stat="identity", position = position_dodge(), fill = "plum4")+
+  geom_text(aes(label= round(1-x,digits = 2)), vjust=-0.2, position = position_dodge(0.9), color = "black", size=3) +
+  labs(title = 'Proportion with child death from last 5-years birth record, by Marital Status', x = 'Marital Status', y = 'Proportion')
+
+p5; q5; r5
+
+```
+
+```{r}
+prop.child_loss<- aggregate(cleaned.outcome1.data$child_loss, list(cleaned.outcome1.data$v228), FUN=mean)
+p6<- ggplot(prop.child_loss, aes(x=reorder(Group.1, -x), y=round(x,digits = 2))) + 
+  geom_bar(stat="identity", position = position_dodge(), fill = "khaki4")+
+  geom_text(aes(label= round(x,digits = 2)), vjust=-0.2, position = position_dodge(0.9), color = "black", size=3) +
+  labs(title = 'Proportion of women to ever lost a child, by Pregnancy Termination Status', x = 'Ever terminated pregnancy', y = 'Proportion')
+
+
+prop.insurance<- aggregate(ready.outcome2.data$v481, list(cleaned.outcome2.data$v228), FUN=mean)
+q6<- ggplot(prop.insurance, aes(x=reorder(Group.1, -x), y=round(x,digits = 2))) + 
+  geom_bar(stat="identity", position = position_dodge(), fill = "indianred4")+
+  geom_text(aes(label= round(x,digits = 2)), vjust=-0.2, position = position_dodge(0.9), color = "black", size=3) +
+  labs(title = 'Proportion with health insurance coverage, by Pregnancy Termination Status', x = 'Pregnancy Termination Status', y = 'Proportion')
+
+
+prop.child_status<- aggregate(ready.outcome3.data$b5, list(cleaned.outcome3.data$v228), FUN=mean)
+r6<- ggplot(prop.child_status, aes(x=reorder(Group.1, x), y=round(1-x,digits = 2))) + 
+  geom_bar(stat="identity", position = position_dodge(), fill = "plum4")+
+  geom_text(aes(label= round(1-x,digits = 2)), vjust=-0.2, position = position_dodge(0.9), color = "black", size=3) +
+  labs(title = 'Proportion with child death from last 5-years birth record, by Pregnancy Termination Status', x = 'Pregnancy Termination Status', y = 'Proportion')
+
+p6; q6; r6
+```
+
+
+```{r}
+prop.child_loss<- aggregate(cleaned.outcome1.data$child_loss, list(cleaned.outcome1.data$smoke), FUN=mean)
+
+ggplot(prop.child_loss, aes(x=reorder(Group.1, -x), y=round(x,digits = 2))) + 
+  geom_bar(stat="identity", position = position_dodge())+
+  geom_text(aes(label= round(x,digits = 2)), vjust=-0.2, position = position_dodge(0.9), color = "black", size=3) +
+  labs(title = 'Proportion of lost children by Smoking status', x = 'Smokes', y = 'Proportion of lost children')
+```
+
+
+
+```{r}
+p<- ggarrange(
+  p1, p2, p3, p4, p5, p6,
+  ncol=2, nrow=3,
+  font.label = list(size=5))
+
+q<- ggarrange(
+  q1, q2, q3, q4, q5, q6,
+  ncol=2, nrow=3,
+  font.label = list(size=5))
+
+r<- ggarrange(
+  r1, r2, r3, r4, r5, r6,
+  ncol=2, nrow=3,
+  font.label = list(size=5))
+
+p; q; r
+```
+
+
+
+```{r}
+ready.outcome1.data<- dummy_cols(cleaned.outcome1.data, select_columns = c('v000', 'v501b'))
+ready.outcome1.data$v013 <- case_when((ready.outcome1.data$v013 == "15-19") ~ 1,
+           (ready.outcome1.data$v013 == "20-24") ~ 2,
+           (ready.outcome1.data$v013 == "25-29") ~ 3,
+           (ready.outcome1.data$v013 == "30-34") ~ 4,
+           (ready.outcome1.data$v013 == "35-39") ~ 5,
+           (ready.outcome1.data$v013 == "40-44") ~ 6,
+           (ready.outcome1.data$v013 == "45-49") ~ 7)
+
+ready.outcome1.data$v025<- case_when((ready.outcome1.data$v025 == "rural") ~ 0,
+           (ready.outcome1.data$v025 == "urban") ~ 1)
+
+ready.outcome1.data$v106<- case_when((ready.outcome1.data$v106 == "no education") ~ 1,
+           (ready.outcome1.data$v106 == "primary") ~ 2,
+           (ready.outcome1.data$v106 == "secondary") ~ 3,
+           (ready.outcome1.data$v106 == "higher") ~ 4)
+
+ready.outcome1.data$v190<- case_when((ready.outcome1.data$v190 == "poorest") ~ 1,
+           (ready.outcome1.data$v190 == "poorer") ~ 2,
+           (ready.outcome1.data$v190 == "middle") ~ 3,
+           (ready.outcome1.data$v190 == "richer") ~ 4,
+           (ready.outcome1.data$v190 == "richest") ~ 5)
+
+ready.outcome1.data$first.sex<- case_when((ready.outcome1.data$first.sex == "<18 years") ~ 1,
+           (ready.outcome1.data$first.sex == "18-24 years") ~ 2,
+           (ready.outcome1.data$first.sex == "25-29 years") ~ 3,
+           (ready.outcome1.data$first.sex == "30+ years") ~ 4)
+
+ready.outcome1.data$v228<- case_when((ready.outcome1.data$v228 == "no") ~ 0,
+           (ready.outcome1.data$v228 == "yes") ~ 1)
+
+ready.outcome1.data$smoke<- case_when((ready.outcome1.data$smoke == "b: No") ~ 0,
+           (ready.outcome1.data$smoke == "a: Yes") ~ 1)
+
+write.csv(ready.outcome1.data,"C:\\UNO Class Doc\\Advanced Stat Machine Learning\\ready.outcome1.csv", row.names = FALSE)
+
+```
+
+
+```{r}
+ready.outcome2.data<- dummy_cols(cleaned.outcome2.data, select_columns = c('v000', 'v501b'))
+
+ready.outcome2.data$v013 <- case_when((ready.outcome2.data$v013 == "15-19") ~ 1,
+           (ready.outcome2.data$v013 == "20-24") ~ 2,
+           (ready.outcome2.data$v013 == "25-29") ~ 3,
+           (ready.outcome2.data$v013 == "30-34") ~ 4,
+           (ready.outcome2.data$v013 == "35-39") ~ 5,
+           (ready.outcome2.data$v013 == "40-44") ~ 6,
+           (ready.outcome2.data$v013 == "45-49") ~ 7)
+
+ready.outcome2.data$v025<- case_when((ready.outcome2.data$v025 == "rural") ~ 0,
+           (ready.outcome2.data$v025 == "urban") ~ 1)
+
+ready.outcome2.data$v106<- case_when((ready.outcome2.data$v106 == "no education") ~ 1,
+           (ready.outcome2.data$v106 == "primary") ~ 2,
+           (ready.outcome2.data$v106 == "secondary") ~ 3,
+           (ready.outcome2.data$v106 == "higher") ~ 4)
+
+ready.outcome2.data$v190<- case_when((ready.outcome2.data$v190 == "poorest") ~ 1,
+           (ready.outcome2.data$v190 == "poorer") ~ 2,
+           (ready.outcome2.data$v190 == "middle") ~ 3,
+           (ready.outcome2.data$v190 == "richer") ~ 4,
+           (ready.outcome2.data$v190 == "richest") ~ 5)
+
+ready.outcome2.data$v228<- case_when((ready.outcome2.data$v228 == "no") ~ 0,
+           (ready.outcome2.data$v228 == "yes") ~ 1)
+
+ready.outcome2.data$v213<- case_when((ready.outcome2.data$v213 == "no or unsure") ~ 0,
+           (ready.outcome2.data$v213 == "yes") ~ 1)
+
+ready.outcome2.data$m14<- case_when((ready.outcome2.data$m14 == "a: No ANC visit") ~ 1,
+           (ready.outcome2.data$m14 == "b: Insufficient ANC visit") ~ 2,
+           (ready.outcome2.data$m14 == "c: Sufficient ANC visit") ~ 3)
+
+ready.outcome2.data$ANC.facility<- case_when((ready.outcome2.data$ANC.facility == "b: No") ~ 0,
+           (ready.outcome2.data$ANC.facility == "a: Yes") ~ 1)
+
+ready.outcome2.data$v312<- case_when((ready.outcome2.data$v312 == "None") ~ 1,
+           (ready.outcome2.data$v312 == "Non-modern") ~ 2,
+           (ready.outcome2.data$v312 == "Modern") ~ 3)
+
+ready.outcome2.data$m15<- case_when((ready.outcome2.data$m15 == "Out-of-facility") ~ 0,
+           (ready.outcome2.data$m15 == "Health facility") ~ 1)
+
+ready.outcome2.data$v401<- case_when((ready.outcome2.data$v401 == "no") ~ 0,
+           (ready.outcome2.data$v401 == "yes") ~ 1)
+
+ready.outcome2.data$v481<- case_when((ready.outcome2.data$v481 == "no") ~ 0,
+           (ready.outcome2.data$v481 == "yes") ~ 1)
+
+write.csv(ready.outcome2.data,"C:\\UNO Class Doc\\Advanced Stat Machine Learning\\ready.outcome2.csv", row.names = FALSE)
+
+```
+
+```{r}
+
+ready.outcome3.data<- dummy_cols(cleaned.outcome3.data, select_columns = c('v000', 'v501b'))
+
+ready.outcome3.data$v013<- case_when((ready.outcome3.data$v013 == "15-19") ~ 1,
+           (ready.outcome3.data$v013 == "20-24") ~ 2,
+           (ready.outcome3.data$v013 == "25-29") ~ 3,
+           (ready.outcome3.data$v013 == "30-34") ~ 4,
+           (ready.outcome3.data$v013 == "35-39") ~ 5,
+           (ready.outcome3.data$v013 == "40-44") ~ 6,
+           (ready.outcome3.data$v013 == "45-49") ~ 7)
+
+ready.outcome3.data$v025<- case_when((ready.outcome3.data$v025 == "rural") ~ 0,
+           (ready.outcome3.data$v025 == "urban") ~ 1)
+
+ready.outcome3.data$v106<- case_when((ready.outcome3.data$v106 == "no education") ~ 1,
+           (ready.outcome3.data$v106 == "primary") ~ 2,
+           (ready.outcome3.data$v106 == "secondary") ~ 3,
+           (ready.outcome3.data$v106 == "higher") ~ 4)
+
+ready.outcome3.data$v190<- case_when((ready.outcome3.data$v190 == "poorest") ~ 1,
+           (ready.outcome3.data$v190 == "poorer") ~ 2,
+           (ready.outcome3.data$v190 == "middle") ~ 3,
+           (ready.outcome3.data$v190 == "richer") ~ 4,
+           (ready.outcome3.data$v190 == "richest") ~ 5)
+
+ready.outcome3.data$v228<- case_when((ready.outcome3.data$v228 == "no") ~ 0,
+           (ready.outcome3.data$v228 == "yes") ~ 1)
+
+ready.outcome3.data$ANC.facility<-case_when((ready.outcome3.data$ANC.facility == "b: No") ~ 0,
+           (ready.outcome3.data$ANC.facility == "a: Yes") ~ 1)
+
+ready.outcome3.data$m15<- case_when((ready.outcome3.data$m15 == "Out-of-facility") ~ 0,
+           (ready.outcome3.data$m15 == "Health facility") ~ 1)
+
+ready.outcome3.data$v401<- case_when((ready.outcome3.data$v401 == "no") ~ 0,
+           (ready.outcome3.data$v401 == "yes") ~ 1)
+
+ready.outcome3.data$b0<- case_when((ready.outcome3.data$b0 == "Single") ~ 0,
+           (ready.outcome3.data$b0 == "Multiple") ~ 1)
+
+ready.outcome3.data$b5<- case_when((ready.outcome3.data$b5 == "no") ~ 0,
+           (ready.outcome3.data$b5 == "yes") ~ 1)
+
+ready.outcome3.data$b4<- case_when((ready.outcome3.data$b4 == "female") ~ 0,
+           (ready.outcome3.data$b4 == "male") ~ 1)
+
+ready.outcome3.data$b20<- case_when((ready.outcome3.data$b20 == "a: Preterm") ~ 1,
+           (ready.outcome3.data$b20 == "b: Term") ~ 2,
+           (ready.outcome3.data$b20 == "c: Post-term") ~ 3)
+
+ready.outcome3.data$child.status<- case_when((ready.outcome3.data$child.status == "Alive: <=1 yr old") ~ 1,
+           (ready.outcome3.data$child.status == "Alive: >1 yr old") ~ 2,
+           (ready.outcome3.data$child.status == "Dead: After 1st year") ~ 3,
+           (ready.outcome3.data$child.status == "Dead: Within 1st year") ~ 4)
+
+write.csv(ready.outcome3.data,"C:\\UNO Class Doc\\Advanced Stat Machine Learning\\ready.outcome3.csv", row.names = FALSE)
+
+```
+
+
+```{r}
+library(caTools)
+library(ROCR)
+
+split<- sample.split(ready.outcome1.data, SplitRatio = 0.8)
+
+outcome1.train<- subset(ready.outcome1.data, split== "TRUE")
+outcome1.test<- subset(ready.outcome1.data, split== "FALSE")
+
+logistic_model1<- glm(child_loss ~ as.factor(v013) + as.factor(v025) +
+                         as.factor(v106) + as.factor(v190) + as.factor(first.sex) +
+                         as.factor(v228) + as.factor(smoke) +
+                         as.factor(`v501b_Formerly married`) +
+                         as.factor(`v501b_Never married`) +
+                         as.factor(v000_AO7) + as.factor(v000_EG6) +
+                         as.factor(v000_ET7) + as.factor(v000_GA6) +
+                         as.factor(v000_GH6) + as.factor(v000_KE6) +
+                         as.factor(v000_ML7) + as.factor(v000_ZA7) +
+                         as.factor(v000_ZM7) + as.factor(v000_ZW7),
+                       data = outcome1.train,
+                       family = "binomial")
+
+
+summary(logistic_model1)
+logistic_model1
+
+predict_model1<- predict(logistic_model1, outcome1.test, type="response")
+predict_model1<- ifelse(predict_model1 > 0.5, 1, 0)
+
+table(outcome1.test$child_loss, predict_model1)
+
+wrong_class<- mean(predict_model1 != outcome1.test$child_loss)
+print(paste('Accuracy =', 1 - wrong_class))
+
+correct_class<- mean(predict_model1 == outcome1.test$child_loss)
+print(paste('Accuracy =', correct_class))
+
+ROCPred<- prediction(predict_model1, outcome1.test$child_loss)
+ROCPerf1<- performance(ROCPred, measure = "tpr", x.measure = "fpr")
+AUC<- performance(ROCPred, measure = "auc")
+AUC<- AUC@y.values[[1]]
+AUC
+AUC1<- round(AUC, 4)
+
+plot(ROCPerf1)
+plot(ROCPerf1, colorize = TRUE,
+     print.cutoffs.at = seq(0.1, by = 0.1),
+     main = "ROC Curve for Child Loss")
+abline(a=0, b=1)
+legend(0.6,0.4, AUC1, title = "AUC", cex=1)
+
+
+round(exp(cbind (OR = coef(logistic_model1), confint(logistic_model1))),4)
+    
+```
+
+
+
+```{r}
+library(caTools)
+library(ROCR)
+
+split<- sample.split(ready.outcome2.data, SplitRatio = 0.8)
+
+outcome2.train<- subset(ready.outcome2.data, split== "TRUE")
+outcome2.test<- subset(ready.outcome2.data, split== "FALSE")
+
+logistic_model2<- glm(v481 ~ as.factor(v013) + as.factor(v025) +
+                        as.factor(v106) + as.factor(v190) + as.factor(m14) +
+                        as.factor(v228) + as.factor(m15) + as.factor(v312) +
+                        as.factor(ANC.facility) + as.factor(v213) +
+                        as.factor(v401) + as.factor(child_loss) +
+                        as.factor(`v501b_Formerly married`) +
+                        as.factor(`v501b_Never married`) +
+                        as.factor(v000_AO7) + as.factor(v000_EG6) +
+                        as.factor(v000_ET7) + as.factor(v000_GA6) +
+                        as.factor(v000_GH6) + as.factor(v000_KE6) +
+                        as.factor(v000_ML7) + as.factor(v000_ZA7) +
+                        as.factor(v000_ZM7) + as.factor(v000_ZW7),
+                      data = outcome2.train,
+                      family = "binomial")
+summary(logistic_model2)
+logistic_model2
+
+predict_model2<- predict(logistic_model2, outcome2.test, type="response")
+predict_model2<- ifelse(predict_model2 > 0.5, 1, 0)
+
+table(outcome2.test$v481, predict_model2)
+
+wrong_class<- mean(predict_model2 != outcome2.test$v481)
+print(paste('Accuracy =', 1 - wrong_class))
+
+correct_class<- mean(predict_model2 == outcome2.test$v481)
+print(paste('Accuracy =', correct_class))
+
+ROCPred<- prediction(predict_model2, outcome2.test$v481)
+ROCPerf2<- performance(ROCPred, measure = "tpr", x.measure = "fpr")
+AUC<- performance(ROCPred, measure = "auc")
+AUC<- AUC@y.values[[1]]
+AUC
+AUC2<- round(AUC, 4)
+
+
+plot(ROCPerf2)
+plot(ROCPerf2, colorize = TRUE,
+     print.cutoffs.at = seq(0.1, by = 0.1),
+     main = "ROC Curve for Health Insurance")
+abline(a=0, b=1)
+legend(0.6,0.4, AUC2, title = "AUC", cex=1)
+
+round(exp(cbind (OR = coef(logistic_model2), confint(logistic_model2))),4)
+
+```
+
+```{r}
+library(caTools)
+library(ROCR)
+
+split<- sample.split(ready.outcome3.data, SplitRatio = 0.8)
+
+outcome3.train<- subset(ready.outcome3.data, split== "TRUE")
+outcome3.test<- subset(ready.outcome3.data, split== "FALSE")
+
+logistic_model3<- glm(b5 ~ as.factor(v013) + as.factor(v025) +
+                        as.factor(v106) + as.factor(v190) + as.factor(b0) +
+                        as.factor(b4) + as.factor(m15) + as.factor(b20) +
+                        as.factor(ANC.facility) + as.factor(v228) +
+                        as.factor(v401) +
+                        as.factor(`v501b_Formerly married`) +
+                        as.factor(`v501b_Never married`) +
+                        as.factor(v000_AO7) + 
+                        as.factor(v000_ET7) + 
+                        as.factor(v000_ML7) + as.factor(v000_ZA7) +
+                        as.factor(v000_ZM7) + as.factor(v000_ZW7),
+                      data = outcome3.train,
+                      family = "binomial")
+summary(logistic_model3)
+logistic_model3
+
+predict_model3<- predict(logistic_model3, outcome3.test, type="response")
+predict_model3<- ifelse(predict_model3 > 0.5, 1, 0)
+
+table(outcome3.test$b5, predict_model3)
+
+wrong_class<- mean(predict_model3 != outcome3.test$b5)
+print(paste('Accuracy =', 1 - wrong_class))
+
+correct_class<- mean(predict_model3 == outcome3.test$b5)
+print(paste('Accuracy =', correct_class))
+
+ROCPred<- prediction(predict_model3, outcome3.test$b5)
+ROCPerf3<- performance(ROCPred, measure = "tpr", x.measure = "fpr")
+AUC<- performance(ROCPred, measure = "auc")
+AUC<- AUC@y.values[[1]]
+AUC
+AUC3<- round(AUC, 4)
+
+plot(ROCPerf3)
+plot(ROCPerf3, colorize = TRUE,
+     print.cutoffs.at = seq(0.1, by = 0.1),
+     main = "ROC Curve for Status of Last Child within Past 5-years")
+abline(a=0, b=1)
+legend(0.6,0.4, AUC3, title = "AUC", cex=1)
+
+exp(cbind (OR = round(coef(logistic_model3),4), round(confint(logistic_model3),4)))
+
+```
+
+
+

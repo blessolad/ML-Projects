@@ -1,0 +1,200 @@
+---
+title: "Codes for ML Contest"
+author: "Oladokun Blessing"
+date: "2022-12-09"
+output: html_document
+---
+
+```{r}
+library(caret)
+#Computing the performance metrics on each of the models
+eval_metrics<- function(true, predicted, df) {
+  SSE <- sum((predicted - true)^2)
+  SST <- sum((true - mean(true))^2)
+  R_square <- 1 - SSE / SST
+  RMSE = sqrt(SSE/nrow(df))
+  data.frame(
+    RMSE = RMSE,
+    Rsquare = R_square
+  )
+}
+
+
+# Setting the training control
+train_cont<- trainControl(method = "repeatedcv",
+                           number = 10,
+                           repeats = 5,
+                           search = "random",
+                           verboseIter = TRUE)
+```
+
+
+
+```{r}
+    #The Bag MARS using gCV Pruning Model#
+library(caret)
+library(earth)
+contest<- read.csv("C:\\UNO Class Doc\\Advanced Stat Machine Learning\\Contest Documents\\train.csv")
+contestData<- data.frame(contest$TotalDays_award, contest$TotalDays_usage, contest$PI_PrevUsage,
+                      contest$PI_PrevUsageRate, contest$Org_PrevFoS, contest$Org_PrevUsage,
+                      contest$Org_PrevUsageRate, contest$PI_New, contest$Org_PrevFoS,
+                      contest$Org_New, contest$Org_PrevUsageRate, as.factor(contest$Carnegie), contest$Carnegie151617,
+                      contest$ChampionsBefore, contest$ChampionsNow, contest$isChampion, contest[,27:56],
+                      contest$Transaction_new_award, contest$Transaction_renewal_award, contest$Transaction_new_usage,
+                      contest$Carnegie15, contest$Transaction_renewal_usage, contest$Transaction_advance,
+                      contest$Transaction_supplement, contest$Transaction_transfer, contest[,57:63], contest[,64:79],
+                      contest[,81:92], contest[,100:109], contest$UsageRate)
+
+# Trained BAG model
+bag.contest<- train(contest.UsageRate ~ .,
+                     data = contestData,
+                     method = "bagEarthGCV",
+                     preProcess = c("center", "scale"),
+                     tuneLength = 10,
+                     trControl = train_cont)
+
+    #Best tuning parameters
+bag.contest$bestTune
+
+y.train<- contestData$contest.UsageRate
+
+    #Predictions on training set
+train.predicted.bag<- predict(bag.contest, contestData)
+eval_metrics(y.train, train.predicted.bag, contestData)
+```
+
+
+
+```{r}
+    #Extreme Gradient Boosting Model#
+
+library(caret)
+library(xgboost)
+library(plyr)
+contest<- read.csv("C:\\UNO Class Doc\\Advanced Stat Machine Learning\\Contest Documents\\train.csv")
+contestData<- data.frame(contest$TotalDays_award, contest$TotalDays_usage, contest$PI_PrevUsage,
+                      contest$PI_PrevUsageRate, contest$Org_PrevFoS, contest$Org_PrevUsage,
+                      contest$Org_PrevUsageRate, contest$PI_New, contest$Org_PrevFoS,
+                      contest$Org_New, contest$Org_PrevUsageRate, as.factor(contest$Carnegie), contest$Carnegie151617,
+                      contest$ChampionsBefore, contest$ChampionsNow, contest$isChampion, contest[,27:56],
+                      contest$Transaction_new_award, contest$Transaction_renewal_award, contest$Transaction_new_usage,
+                      contest$Carnegie15, contest$Transaction_renewal_usage, contest$Transaction_advance,
+                      contest$Transaction_supplement, contest$Transaction_transfer, contest[,57:63], contest[,64:79],
+                      contest[,81:92], contest[,100:109], contest$UsageRate)
+
+# Training the XGBoost model
+xgboost.contest<- train(contest.UsageRate ~ .,
+                     data = contestData,
+                     method = "xgbDART",
+                     preProcess = c("center", "scale"),
+                     tuneLength = 10,
+                     trControl = train_cont)
+
+    #Best tuning parameters
+xgboost.contest$bestTune
+
+y.train<- contestData$contest.UsageRate
+
+    #Predictions on training set
+train.predicted.xgboost<- predict(xgboost.contest, contestData)
+eval_metrics(y.train, train.predicted.xgboost, contestData)
+```
+
+
+
+```{r}
+    #Neural Network with feature extraction (PCA)
+library(caret)
+library(nnet)
+contest<- read.csv("C:\\UNO Class Doc\\Advanced Stat Machine Learning\\Contest Documents\\train.csv")
+contestData<- data.frame(contest$TotalDays_award, contest$TotalDays_usage, contest$PI_PrevUsage,
+                      contest$PI_PrevUsageRate, contest$Org_PrevFoS, contest$Org_PrevUsage,
+                      contest$Org_PrevUsageRate, contest$PI_New, contest$Org_PrevFoS,
+                      contest$Org_New, contest$Org_PrevUsageRate, as.factor(contest$Carnegie), contest$Carnegie151617,
+                      contest$ChampionsBefore, contest$ChampionsNow, contest$isChampion, contest[,27:56],
+                      contest$Transaction_new_award, contest$Transaction_renewal_award, contest$Transaction_new_usage,
+                      contest$Carnegie15, contest$Transaction_renewal_usage, contest$Transaction_advance,
+                      contest$Transaction_supplement, contest$Transaction_transfer, contest[,57:63], contest[,64:79],
+                      contest[,81:92], contest[,100:109], contest$UsageRate)
+
+# Trained NeuralNetwork model
+pca_nnet.contest<- train(contest.UsageRate ~ .,
+                     data = contestData,
+                     method = "pcaNNet",
+                     preProcess = c("center", "scale"),
+                     tuneLength = 10,
+                     trControl = train_cont)
+
+    #Best tuning parameters
+pca_nnet.contest$bestTune
+
+y.train<- contestData$contest.UsageRate
+
+    #Predictions on training set
+train.predicted.pca_nnet<- predict(pca_nnet.contest, contestData)
+eval_metrics(y.train, train.predicted.pca_nnet, contestData)
+
+```
+
+
+
+```{r}
+    #Neural Network model
+library(caret)
+library(nnet)
+contest<- read.csv("C:\\UNO Class Doc\\Advanced Stat Machine Learning\\Contest Documents\\train.csv")
+contestData<- data.frame(contest$TotalDays_award, contest$TotalDays_usage, contest$PI_PrevUsage,
+                      contest$PI_PrevUsageRate, contest$Org_PrevFoS, contest$Org_PrevUsage,
+                      contest$Org_PrevUsageRate, contest$PI_New, contest$Org_PrevFoS,
+                      contest$Org_New, contest$Org_PrevUsageRate, as.factor(contest$Carnegie), contest$Carnegie151617,
+                      contest$ChampionsBefore, contest$ChampionsNow, contest$isChampion, contest[,27:56],
+                      contest$Transaction_new_award, contest$Transaction_renewal_award, contest$Transaction_new_usage,
+                      contest$Carnegie15, contest$Transaction_renewal_usage, contest$Transaction_advance,
+                      contest$Transaction_supplement, contest$Transaction_transfer, contest[,57:63], contest[,64:79],
+                      contest[,81:92], contest[,100:109], contest$UsageRate)
+
+# Trained NeuralNetwork model
+nnet.contest<- train(contest.UsageRate ~ .,
+                     data = contestData,
+                     method = "nnet",
+                     preProcess = c("center", "scale"),
+                     tuneLength = 10,
+                     trControl = train_cont)
+
+    #Best tuning parameters
+nnet.contest$bestTune
+
+y.train<- contestData$contest.UsageRate
+
+    #Predictions on training set
+train.predicted.nnet<- predict(nnet.contest, contestData)
+eval_metrics(y.train, train.predicted.nnet, contestData)
+
+```
+
+
+
+```{r}
+    #Predicting on the test set and saving the prediction output
+
+contest<- read.csv("C:\\UNO Class Doc\\Advanced Stat Machine Learning\\Contest Documents\\test.csv") 
+contestData<- data.frame(contest$TotalDays_award, contest$TotalDays_usage, contest$PI_PrevUsage,
+                      contest$PI_PrevUsageRate, contest$Org_PrevFoS, contest$Org_PrevUsage,
+                      contest$Org_PrevUsageRate, contest$PI_New, contest$Org_PrevFoS,
+                      contest$Org_New, contest$Org_PrevUsageRate, as.factor(contest$Carnegie), contest$Carnegie151617,
+                      contest$ChampionsBefore, contest$ChampionsNow, contest$isChampion, contest[,27:56],
+                      contest$Transaction_new_award, contest$Transaction_renewal_award, contest$Transaction_new_usage,
+                      contest$Carnegie15, contest$Transaction_renewal_usage, contest$Transaction_advance,
+                      contest$Transaction_supplement, contest$Transaction_transfer, contest[,57:63], contest[,64:79],
+                      contest[,81:92], contest[,100:109])
+
+test.predicted<- predict(xgboost.contest, contestData)
+
+contest.pred<- data.frame(Grant_Number=contest[,1], UsageRate=test.predicted)
+head(contest.pred)
+
+
+write.csv(contest.pred,"C:\\UNO Class Doc\\Advanced Stat Machine Learning\\Contest Documents\\blessing_pred25.csv", row.names = FALSE)
+
+```
+
